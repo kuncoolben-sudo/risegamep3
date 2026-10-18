@@ -1,0 +1,9 @@
+project_id = "risegamep4"
+
+[auth]
+enable_anonymous_sign_ins = true   # "เล่นเลย (ไม่ต้องสมัคร)"
+enable_signup = true
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
