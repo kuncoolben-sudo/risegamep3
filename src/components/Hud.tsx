@@ -1,0 +1,42 @@
+import { Avatar } from './Avatar';
+import { useGame } from '../state/GameContext';
+
+export type View = 'map' | 'pet' | 'bag' | 'pvp' | 'lesson';
+
+export function Bar({ value, max, kind }: { value: number; max: number; kind: 'hp' | 'mana' }) {
+  return (
+    <div className={`bar ${kind}`} title={`${value}/${max}`}>
+      <div style={{ width: `${Math.max(0, Math.min(100, (value / max) * 100))}%` }} />
+      <span>{kind === 'hp' ? '❤️' : '💧'} {value}/{max}</span>
+    </div>
+  );
+}
+
+export function Hud({ view, go, hp, mana }: { view: View; go: (v: View) => void; hp?: number; mana?: number }) {
+  const { character, pet, species, signOut } = useGame();
+  if (!character) return null;
+  const icon = species.find((s) => s.id === pet?.species_id)?.icon;
+  return (
+    <header className="hud">
+      <div className="hud-who">
+        <Avatar look={character.appearance} size={40} />
+        <div>
+          <b>{character.name}</b> <span title="สัตว์เลี้ยง">{icon}</span>
+          <div className="coins">🪙 {character.coins}</div>
+        </div>
+      </div>
+      <div className="hud-bars">
+        <Bar value={hp ?? character.hp} max={character.max_hp} kind="hp" />
+        <Bar value={mana ?? character.mana} max={character.max_mana} kind="mana" />
+      </div>
+      <nav>
+        {([['map', '🗺️', 'แผนที่'], ['pet', '🐾', 'สัตว์เลี้ยง'], ['bag', '🎒', 'กระเป๋า']] as const).map(([v, e, t]) => (
+          <button key={v} className={`nav ${view === v ? 'on' : ''}`} onClick={() => go(v)} disabled={view === 'lesson'}>
+            {e}<span>{t}</span>
+          </button>
+        ))}
+        <button className="nav" onClick={signOut} title="ออกจากระบบ">🚪<span>ออก</span></button>
+      </nav>
+    </header>
+  );
+}

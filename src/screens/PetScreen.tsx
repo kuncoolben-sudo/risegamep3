@@ -1,0 +1,30 @@
+import { useGame } from '../state/GameContext';
+import { STAGE_NAMES, STAGE_THRESHOLDS } from '../lib/util';
+
+export function PetScreen() {
+  const { pet, species, progress } = useGame();
+  const sp = species.find((s) => s.id === pet?.species_id);
+  if (!pet || !sp) return null;
+  const cleared = progress.size;
+  const next = STAGE_THRESHOLDS[pet.stage - 1];
+  return (
+    <section className="card center">
+      <div className="pet-hero" style={{ fontSize: 80 + pet.stage * 28 }}>{sp.icon}{pet.stage === 3 && <span className="sparkle">✨</span>}</div>
+      <h2>{sp.name_en} · {sp.name_th}</h2>
+      <p className="badge">ระดับ {pet.stage}: {STAGE_NAMES[pet.stage - 1]}</p>
+      <p>{sp.blurb_th}</p>
+      {next ? (
+        <>
+          <div className="bar xp"><div style={{ width: `${(cleared / next) * 100}%` }} /><span>ผ่านบทเรียน {cleared}/{next}</span></div>
+          <p className="muted">เติบโตด้วยการเรียน ไม่ใช่การสุ่ม และไม่เสียสัตว์เลี้ยงเมื่อแพ้</p>
+        </>
+      ) : (
+        <p className="muted">สัตว์เลี้ยงเติบโตเต็มที่แล้ว 🎉</p>
+      )}
+      <div className="skill">
+        <b>⚡ ทักษะ: {sp.skill_name}</b>
+        <p>{pet.stage >= 2 ? 'ใช้ได้ในการดวล (ใช้ Mana 10)' : `ปลดล็อกเมื่อเติบโตถึงระดับ 2 (ผ่าน ${STAGE_THRESHOLDS[0]} บทเรียน)`}</p>
+      </div>
+    </section>
+  );
+}
