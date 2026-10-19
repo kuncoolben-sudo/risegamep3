@@ -15,6 +15,11 @@
         var el = document.getElementById('boot') || document.getElementById('root');
         if (el && !document.querySelector('.app')) el.innerHTML = '<pre style="white-space:pre-wrap;font:14px monospace;padding:24px;color:#b00020">เปิดเกมไม่สำเร็จ\n' + String(msg).replace(/</g, '&lt;') + '</pre>';
       }
+      setTimeout(function () {
+        if (!window.__booted) showBootError('เกมยังไม่เริ่มทำงานใน 6 วินาที (ไฟล์สคริปต์โหลดไม่ได้?)\nลองปิดแท็บแล้วเปิดใหม่ หรือใช้เบราว์เซอร์เวอร์ชันล่าสุด\n' + navigator.userAgent);
+      }, 6000);
+      // a <script> that fails to load fires 'error' on the element only (capture phase needed)
+      window.addEventListener('error', function (e) { if (e.target && e.target.tagName === 'SCRIPT') showBootError('โหลดไฟล์เกมไม่ได้: ' + e.target.src); }, true);
       window.addEventListener('error', function (e) { showBootError(e.message + (e.filename ? '\n' + e.filename + ':' + e.lineno : '')); });
       window.addEventListener('unhandledrejection', function (e) { showBootError(e.reason && e.reason.message || e.reason); });
     </script>

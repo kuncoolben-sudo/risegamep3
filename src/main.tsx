@@ -4,4 +4,5 @@ import App from './App';
 import { ErrorBoundary } from './ErrorBoundary';
 import './styles.css';
 
+(window as unknown as { __booted?: boolean }).__booted = true;
 createRoot(document.getElementById('root')!).render(<StrictMode><ErrorBoundary><App /></ErrorBoundary></StrictMode>);
