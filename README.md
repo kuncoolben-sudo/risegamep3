@@ -46,6 +46,18 @@ npm run build
 2. Settings → Secrets and variables → Actions → เพิ่ม `VITE_SUPABASE_URL` และ `VITE_SUPABASE_ANON_KEY`
 3. Merge เข้า `main` (หรือรัน workflow "Deploy to GitHub Pages" ด้วยมือ) — workflow อยู่ที่ `.github/workflows/deploy.yml` และตั้ง base path เป็น `/<ชื่อ repo>/` ให้เอง
 
+## เสียงอังกฤษจาก Azure (เด็ก UK, พูดช้า)
+
+เกมเล่นไฟล์ `public/audio/*.mp3` ก่อน (เสียงเหมือนกันทุกเครื่อง) ถ้าไม่มีไฟล์จะใช้เสียงในเครื่องแทน ไฟล์สร้างจาก Azure Speech (เสียง `en-GB-MaisieNeural`, ความเร็ว −25%) สำหรับข้อความทั้งหมดใน `content/units.json` (~240 ข้อความ ~3,500 ตัวอักษร อยู่ในโควต้าฟรีรายเดือนของ Azure)
+
+ขอ key (ฟรี):
+1. portal.azure.com → สร้างทรัพยากร **Speech** (Azure AI Speech), pricing tier **Free F0**, เลือก region เช่น `southeastasia`
+2. เปิดทรัพยากร → Keys and Endpoint → คัดลอก **KEY 1** และชื่อ **Location/Region**
+3. GitHub repo → Settings → Secrets and variables → Actions → เพิ่ม `AZURE_SPEECH_KEY` และ `AZURE_SPEECH_REGION`
+4. แท็บ Actions → **Build audio (Azure TTS)** → Run workflow (สร้างไฟล์ commit เข้า main และ deploy ให้อัตโนมัติ)
+
+บนเครื่องตัวเอง: `AZURE_SPEECH_KEY=… AZURE_SPEECH_REGION=… npm run audio:build` · ดูรายการข้อความ `npm run audio:build -- --dry` · ดูรายชื่อเสียง en-GB ที่ใช้ได้ `npm run audio:build -- --voices` (ตั้ง `AZURE_VOICE`, `AZURE_RATE`, `AZURE_PITCH` เพื่อเปลี่ยนเสียง/ความเร็ว) ถ้าแก้เนื้อหา ให้รันใหม่ ระบบสร้างเฉพาะข้อความที่เพิ่ม/เปลี่ยน
+
 ## โลก 3D
 
 หน้าเริ่มต้นคือโลก 3D (Three.js + React Three Fiber) เดินด้วยจอยสติ๊กลอย (แตะค้างตรงไหนก็ได้บนจอแล้วลาก ปล่อยแล้วหยุด) หรือ WASD / ลูกศรบนคอม เดินเข้าใกล้สถานที่แล้วกด E หรือปุ่ม "เข้า" เพื่อเปิดบทเรียน พักฟื้น หรือเข้าลานประลอง (ใช้ RPC เดิมทั้งหมด) แผนที่ 2D ยังอยู่ในแท็บ "แผนที่ 2D" และมี "โหมดประหยัด" สำหรับเครื่องช้า

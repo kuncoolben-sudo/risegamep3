@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "seed:build": "node scripts/build-seed.mjs",
     "db:test": "bash scripts/test-db.sh",
-    "models:build": "python3 tools/blender/build_models.py"
+    "models:build": "python3 tools/blender/build_models.py",
+    "audio:build": "node scripts/build-audio.mjs"
   },
   "dependencies": {
     "@react-three/drei": "9.117",

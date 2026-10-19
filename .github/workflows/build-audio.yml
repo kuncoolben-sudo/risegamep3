@@ -1,0 +1,36 @@
+name: Build audio (Azure TTS)
+# Run by hand from the Actions tab. Generates public/audio/*.mp3 with Azure Speech, commits them
+# to main and triggers the Pages deploy. Only new/changed texts are generated.
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+jobs:
+  audio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/build-audio.mjs
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+      - name: Commit audio and redeploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/audio
+          if git diff --cached --quiet; then
+            echo "No audio changes."
+          else
+            git commit -m "Update generated speech audio"
+            git push
+            gh workflow run deploy.yml --ref main
+          fi
