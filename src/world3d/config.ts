@@ -1,6 +1,8 @@
 // Map (2D design coordinates) -> 3D world coordinates, plus which model stands at each location.
-export const WORLD_RADIUS = 26;
-export const toWorld = (x: number, y: number): [number, number] => [(x - 500) / 22, (y - 380) / 22];
+// ~1.6x larger than the first version: longer walks between places, more to look at on the way
+export const WORLD_RADIUS = 40;
+export const toWorld = (x: number, y: number): [number, number] => [(x - 500) / 14, (y - 380) / 14];
+export const SCENERY_COUNT = 280;
 
 export const LOCATION_MODEL: Record<string, { file: string; scale?: number }> = {
   start: { file: 'b_cottage' },

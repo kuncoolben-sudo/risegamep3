@@ -142,3 +142,15 @@ input, textarea { font: inherit; padding: 10px 12px; border: 2px solid var(--lin
 
 .status-card { background: var(--bg); border-radius: 14px; padding: 10px 14px; margin-top: 10px; display: grid; gap: 6px; text-align: left; }
 .stat-row { display: flex; justify-content: space-around; font-size: 1.05rem; }
+
+/* minimap + quest compass */
+.minimap-wrap { position: absolute; left: 12px; top: 92px; z-index: 3; display: grid; gap: 6px; justify-items: start; pointer-events: none; }
+.minimap { position: relative; border-radius: 50%; background: radial-gradient(circle, #9bd77a, #6fb653); border: 3px solid rgba(255,255,255,.85); box-shadow: 0 3px 10px rgba(0,0,0,.35); overflow: hidden; }
+.mm-dot { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #9aa5b5; border: 1px solid #fff; }
+.mm-dot.open { background: #ffcf40; } .mm-dot.cleared { background: #3ddc84; }
+.mm-dot.quest { width: 12px; height: 12px; margin: -6px 0 0 -6px; animation: pulse-dot 1s infinite alternate; }
+@keyframes pulse-dot { to { transform: scale(1.5); } }
+.mm-me { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #ff4d4d; border: 2px solid #fff; }
+.quest-arrow { display: flex; align-items: center; gap: 8px; background: rgba(10,25,45,.75); color: #fff; padding: 4px 10px 4px 6px; border-radius: 999px; font-size: .8rem; line-height: 1.1; border: 2px solid var(--gold); }
+.arrow-icon { display: inline-block; font-size: 1.3rem; color: var(--gold); transform: rotate(var(--rot, 0rad)); }
+@media (max-width: 800px) { .minimap-wrap { top: 96px; } }
