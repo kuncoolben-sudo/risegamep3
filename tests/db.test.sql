@@ -60,13 +60,13 @@ select pg_temp.assert((select status from public.location_states() where locatio
 select pg_temp.assert((select status from public.location_states() where location_id = 'arena') = 'open', 'arena opened');
 select pg_temp.assert((select coins from public.characters) = 45, 'coins 20 + 25 for 3 stars');
 
--- wrong answers cost HP but never below 1; hints cost mana
+-- HP/Mana are PvP-only: wrong answers and hints in lessons cost nothing
 select public.travel('u1');
 select pg_temp.expect_err($$ select public.complete_lesson('u1-l1', 2, 3, 0, 0) $$, 'invalid_result');
 select public.complete_lesson('u1-l1', (select count(*)::int from public.activities where lesson_id = 'u1-l1'),
   (select count(*)::int from public.activities where lesson_id = 'u1-l1'), 100, 2);
-select pg_temp.assert((select hp from public.characters) = 1, 'hp floors at 1');
-select pg_temp.assert((select mana from public.characters) = 34, 'hint mana cost');
+select pg_temp.assert((select hp from public.characters) = 100, 'wrong answers do not cost HP');
+select pg_temp.assert((select mana from public.characters) = 40, 'hints do not cost Mana');
 
 -- project is optional: clearing the 4 required lessons clears u1 and opens u2
 select pg_temp.clear_here();
@@ -80,8 +80,13 @@ select pg_temp.expect_err($$ select public.rest() $$, 'not_a_rest_stop');
 select public.travel('u2');
 select pg_temp.clear_here();
 select pg_temp.assert((select stage from public.pets) = 2, 'pet evolved after 6+ lessons');
+reset role;
+update public.characters set hp = 1, mana = 0 where user_id = :'ua';
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'ua', false);
 select public.travel('campA');
 select pg_temp.assert((select (public.rest() ->> 'hp')::int) = 41, 'camp heals 40');
+select pg_temp.assert((select mana from public.characters) = 15, 'camp restores 15 mana');
 select pg_temp.expect_err($$ select public.rest() $$, 'already_rested');
 select public.travel('u3');
 select public.travel('campA');
@@ -90,7 +95,9 @@ select pg_temp.expect_err($$ select public.buy_item('apple', 1) $$, 'not_at_inn'
 
 -- items
 select public.use_item('apple');
-select pg_temp.expect_err($$ select public.use_item('tea') $$, 'already_full');
+select public.use_item('tea');
+select pg_temp.assert((select hp from public.characters) = 100 and (select mana from public.characters) = 40, 'items restore to full');
+select pg_temp.expect_err($$ select public.use_item('apple') $$, 'already_full');
 select pg_temp.expect_err($$ select public.use_item('sandwich') $$, 'no_item');
 
 -- ===== inn: climb to u4 using direct progress (as postgres) =====
@@ -120,12 +127,18 @@ insert into public.lesson_progress (character_id, lesson_id, best_correct, total
 select c.id, 'start-l1', 1, 1, 3 from public.characters c where c.user_id = :'ub';
 set role authenticated;
 
+reset role;
+update public.characters set hp = 60, mana = 30 where user_id = :'ua';
+set role authenticated;
 select set_config('request.jwt.claim.sub', :'ua', false);
 create temp table m as select public.pvp_find_match() as id;
 select pg_temp.assert((select status from public.pvp_matches where id = (select id from m)) = 'waiting', 'waiting for opponent');
 select set_config('request.jwt.claim.sub', :'ub', false);
 select pg_temp.assert((select public.pvp_find_match()) = (select id from m), 'B joins the same match');
 select pg_temp.assert((select status from public.pvp_matches) = 'active', 'match active');
+select pg_temp.assert((select p1_hp = 60 and p1_mana = 30 and p2_hp = 100 and p2_mana = 40 from public.pvp_matches), 'match starts from current HP/Mana');
+select pg_temp.expect_err($$ select public.use_item('apple') $$, 'in_match');
+select pg_temp.expect_err($$ select public.rest() $$, 'in_match');
 select pg_temp.assert((select q_choices is not null and q_prompt is not null from public.pvp_matches), 'question set');
 
 -- not B's turn first
@@ -163,6 +176,8 @@ select pg_temp.assert((select status from public.pvp_matches where id = (select 
 select pg_temp.assert((select c.user_id from public.pvp_matches pm join public.characters c on c.id = pm.winner where pm.id = (select id from m)) = :'ua', 'A wins');
 select pg_temp.assert((select pvp_wins from public.characters where user_id = :'ua') = 1 and (select pvp_losses from public.characters where user_id = :'ub') = 1, 'win/loss recorded');
 select pg_temp.assert((select count(*) from public.pvp_secrets) >= 1, 'secrets stay server side');
+select pg_temp.assert((select c.hp = greatest(25, pm.p1_hp) and c.mana = pm.p1_mana from public.pvp_matches pm join public.characters c on c.id = pm.p1 where pm.id = (select id from m)), 'A keeps match HP/Mana');
+select pg_temp.assert((select c.hp = 25 from public.pvp_matches pm join public.characters c on c.id = pm.p2 where pm.id = (select id from m)), 'defeated B is floored at 25 HP');
 
 -- finished matches don't block a new search; timeout claim needs an idle opponent
 set role authenticated;

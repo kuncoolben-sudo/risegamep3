@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { GameProvider, useGame } from './state/GameContext';
 import { Hud, type View } from './components/Hud';
 import { AuthScreen, SetupScreen } from './screens/AuthScreen';
@@ -16,8 +16,6 @@ function Shell() {
   const [view, setView] = useState<View>('world');
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [pvp, setPvp] = useState(false);
-  const [live, setLive] = useState<{ hp: number; mana: number } | null>(null);
-  const onLive = useCallback((hp: number, mana: number) => setLive({ hp, mana }), []);
 
   let body;
   if (phase === 'loading') body = <main className="card center"><p>กำลังโหลด…</p></main>;
@@ -26,9 +24,9 @@ function Shell() {
   else if (phase === 'auth') body = <AuthScreen />;
   else if (phase === 'create') body = <CreateCharacter />;
   else {
-    const leaveLesson = () => { setLessonId(null); setLive(null); setView('world'); refresh(); };
+    const leaveLesson = () => { setLessonId(null); setView('world'); refresh(); };
     const play = (id: string) => { setLessonId(id); setView('lesson'); };
-    const hud = (overlay: boolean) => <Hud overlay={overlay} view={pvp ? 'pvp' : view} go={(v) => { setPvp(false); setView(v); }} hp={live?.hp} mana={live?.mana} />;
+    const hud = (overlay: boolean) => <Hud overlay={overlay} view={pvp ? 'pvp' : view} go={(v) => { setPvp(false); setView(v); }} />;
     // the 3D world is full screen with the status bar drawn on top of it
     if (view === 'world' && !pvp) {
       body = (
@@ -42,7 +40,7 @@ function Shell() {
           {hud(false)}
           <main className="stage">
             {pvp ? <PvpScreen onExit={() => setPvp(false)} />
-              : view === 'lesson' && lessonId ? <LessonScreen lessonId={lessonId} onExit={leaveLesson} onLive={onLive} />
+              : view === 'lesson' && lessonId ? <LessonScreen lessonId={lessonId} onExit={leaveLesson} />
               : view === 'map' ? <MapScreen onPlay={play} onPvp={() => setPvp(true)} />
               : view === 'pet' ? <PetScreen />
               : <BagScreen />}

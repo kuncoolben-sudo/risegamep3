@@ -5,13 +5,9 @@ import { shuffled } from '../lib/util';
 import type { ActivityRow, LessonResult } from '../lib/types';
 import { useGame } from '../state/GameContext';
 
-const HINT_COST = 3;
-const WRONG_COST = 5;
-
 interface ActProps {
   a: ActivityRow;
-  canHint: boolean;
-  onWrong: () => void;
+    onWrong: () => void;
   onHint: () => void;
   onDone: (firstTry: boolean, note?: string) => void;
 }
@@ -21,7 +17,7 @@ function Speaker({ text }: { text?: string }) {
   return <button className="btn round" onClick={() => speak(text)} aria-label="ฟังเสียง">🔊</button>;
 }
 
-function Choice({ a, canHint, onWrong, onHint, onDone }: ActProps) {
+function Choice({ a, onWrong, onHint, onDone }: ActProps) {
   const choices = useMemo(() => shuffled(a.payload.choices ?? []), [a.id]);
   const [bad, setBad] = useState<Set<string>>(new Set());
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -58,7 +54,7 @@ function Choice({ a, canHint, onWrong, onHint, onDone }: ActProps) {
         ))}
       </div>
       <div className="act-foot">
-        <button className="btn ghost" disabled={ok || !canHint} onClick={hint}>💡 คำใบ้ (−{HINT_COST} Mana)</button>
+        <button className="btn ghost" disabled={ok} onClick={hint}>💡 คำใบ้</button>
         {ok && <button className="btn" onClick={() => onDone(bad.size === 0 && hidden.size === 0)}>ถัดไป ➜</button>}
       </div>
       {ok && <p className="good">✔ Correct!</p>}
@@ -67,7 +63,7 @@ function Choice({ a, canHint, onWrong, onHint, onDone }: ActProps) {
 }
 
 // spell (letters) and sentence_order (words) share one tap-in-order mechanic
-function Sequence({ a, canHint, onWrong, onHint, onDone }: ActProps) {
+function Sequence({ a, onWrong, onHint, onDone }: ActProps) {
   const spell = a.type === 'spell';
   const answer = a.payload.answer!;
   const units = useMemo(() => (spell ? answer.split('') : answer.split(/\s+/)), [a.id]);
@@ -115,7 +111,7 @@ function Sequence({ a, canHint, onWrong, onHint, onDone }: ActProps) {
         ))}
       </div>
       <div className="act-foot">
-        <button className="btn ghost" disabled={done || !canHint} onClick={hint}>💡 คำใบ้ (−{HINT_COST} Mana)</button>
+        <button className="btn ghost" disabled={done} onClick={hint}>💡 คำใบ้</button>
         {done && <button className="btn" onClick={() => onDone(!mistake && !hinted)}>ถัดไป ➜</button>}
       </div>
       {done && <p className="good">✔ {answer}</p>}
@@ -138,8 +134,8 @@ function ProjectAct({ a, onDone }: ActProps) {
   );
 }
 
-export function LessonScreen({ lessonId, onExit, onLive }: { lessonId: string; onExit: () => void; onLive: (hp: number, mana: number) => void }) {
-  const { lessons, character, refresh, locations, say } = useGame();
+export function LessonScreen({ lessonId, onExit }: { lessonId: string; onExit: () => void }) {
+  const { lessons, refresh, locations, say } = useGame();
   const lesson = lessons.find((l) => l.id === lessonId);
   const [acts, setActs] = useState<ActivityRow[] | null>(null);
   const [i, setI] = useState(0);
@@ -154,10 +150,6 @@ export function LessonScreen({ lessonId, onExit, onLive }: { lessonId: string; o
       else setActs(data as ActivityRow[]);
     });
   }, [lessonId, say]);
-
-  const hp = Math.max(1, (character?.hp ?? 1) - WRONG_COST * stats.wrong);
-  const mana = Math.max(0, (character?.mana ?? 0) - HINT_COST * stats.hints);
-  useEffect(() => onLive(hp, mana), [hp, mana, onLive]);
 
   async function finish(s: typeof stats, n?: string) {
     setSaving(true);
@@ -187,7 +179,6 @@ export function LessonScreen({ lessonId, onExit, onLive }: { lessonId: string; o
         {result.item_drop && <p>🍎 ได้ไอเทมใหม่!</p>}
         {result.evolved && <p className="badge">🐾 สัตว์เลี้ยงของคุณเติบโตเป็นระดับ {result.pet_stage}!</p>}
         {names.length > 0 && <p>🗺️ ปลดล็อก: <b>{names.join(', ')}</b></p>}
-        {character && character.hp * 10 <= character.max_hp && <p className="notice">เหนื่อยแล้ว — ไปพักที่แคมป์หรือโรงเตี๊ยมกันเถอะ</p>}
         <button className="btn big" onClick={onExit}>กลับแผนที่</button>
       </section>
     );
@@ -196,7 +187,6 @@ export function LessonScreen({ lessonId, onExit, onLive }: { lessonId: string; o
   const a = acts[i];
   const props: ActProps = {
     a,
-    canHint: mana >= HINT_COST,
     onWrong: () => setStats((s) => ({ ...s, wrong: s.wrong + 1 })),
     onHint: () => setStats((s) => ({ ...s, hints: s.hints + 1 })),
     onDone: (firstTry, n) => {
