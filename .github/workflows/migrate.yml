@@ -1,0 +1,23 @@
+name: Migrate database (Supabase)
+# Runs supabase/migrations/* (once each) and the seed whenever database files change on main.
+# Needs the repository secret SUPABASE_DB_URL (Session pooler connection string, see README).
+on:
+  push:
+    branches: [main]
+    paths:
+      - supabase/**
+      - scripts/migrate.sh
+  workflow_dispatch:
+concurrency:
+  group: migrate
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/migrate.sh
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
