@@ -22,7 +22,7 @@ export function BagScreen() {
   return (
     <section className="card">
       <h2>🎒 กระเป๋า</h2>
-      <p>🪙 เหรียญ: <b>{character?.coins}</b> · ซื้อไอเทมได้ที่โรงเตี๊ยม</p>
+      <p>🪙 เหรียญ: <b>{character?.coins}</b> · ซื้อไอเทมได้ที่โรงพยาบาล</p>
       {pet && (
         <div className="mini-bars">
           <Bar value={pet.hp} max={pet.max_hp} kind="hp" />
