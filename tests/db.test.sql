@@ -193,6 +193,27 @@ begin
   end;
 end $$;
 
+-- matchmaking: the opponent is one of the three players closest in stars (three clones of A's progress vs far-off B)
+insert into auth.users (id) select gen_random_uuid() from generate_series(1, 3);
+insert into public.characters (user_id, name, appearance)
+select id, 'Clone' || row_number() over (), '{}' from auth.users where id not in (:'ua', :'ub');
+insert into public.pets (character_id, species_id) select id, 'lion' from public.characters where name like 'Clone%';
+insert into public.lesson_progress (character_id, lesson_id, best_correct, total, stars)
+select cl.id, lp.lesson_id, lp.best_correct, lp.total, lp.stars
+from public.characters cl, public.lesson_progress lp where cl.name like 'Clone%' and lp.character_id = (select id from public.characters where user_id = :'ua');
+create temp table near (i int, opp uuid);
+do $$
+declare i int; v_id uuid;
+begin
+  perform set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', true);
+  for i in 1..30 loop
+    v_id := public.pvp_find_match();
+    insert into near select i, p2 from public.pvp_matches where id = v_id;
+  end loop;
+end $$;
+select pg_temp.assert(not exists (select 1 from near where opp = (select id from public.characters where user_id = :'ub')), 'the far-off player is never picked while closer ones exist');
+select pg_temp.assert((select count(distinct opp) = 3 from near), 'all three close players come up');
+
 -- many duels with set stats: the stronger and faster pet wins, a stage-3 pet casts every form it has, a stage-1 pet only its first
 create temp table sim (a_wins boolean, a_forms int[], b_forms int[], a_acts int, b_acts int);
 do $$
