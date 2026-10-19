@@ -17,6 +17,7 @@ const ERRORS: Record<string, string> = {
   not_your_turn: 'ยังไม่ถึงตาของคุณ',
   skill_locked: 'สัตว์เลี้ยงต้องเติบโตถึงระดับ 2 ก่อนจึงใช้ทักษะได้',
   no_mana: 'Mana ไม่พอ',
+  in_match: 'กำลังดวลอยู่ ใช้ไอเทมหรือพักไม่ได้จนกว่าจะจบการดวล',
   character_exists: 'มีตัวละครอยู่แล้ว',
   invalid_name: 'ชื่อต้องยาว 1–20 ตัวอักษร',
 };

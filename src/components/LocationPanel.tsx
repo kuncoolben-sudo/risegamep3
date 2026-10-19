@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { rpc, errorText } from '../lib/supabase';
 import { useGame } from '../state/GameContext';
+import { Bar } from './Hud';
 import { useTravel } from '../state/useTravel';
 import type { LocationRow } from '../lib/types';
 
@@ -56,6 +57,12 @@ export function LocationPanel({ selected, onClose, onPlay, onPvp, empty }: {
       <>
         {header}
         <p>{selected.blurb_th}</p>
+        {character && (
+          <div className="mini-bars">
+            <Bar value={character.hp} max={character.max_hp} kind="hp" />
+            <Bar value={character.mana} max={character.max_mana} kind="mana" />
+          </div>
+        )}
         <button className="btn big" disabled={busy || (!inn && character?.rested_here)} onClick={() => act('rest', undefined, inn ? 'พักผ่อนจนเต็ม! 💤' : 'พักที่แคมป์แล้ว ✨')}>
           {inn ? ((character?.coins ?? 0) >= 3 ? '🛏️ พักจนเต็ม (3 🪙)' : '🛏️ พักจนเต็ม (ฟรี)') : character?.rested_here ? '⛺ พักแล้ว' : '⛺ พักที่แคมป์ (+40 HP, +15 Mana)'}
         </button>

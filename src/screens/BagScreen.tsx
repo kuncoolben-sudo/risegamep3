@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { rpc, errorText } from '../lib/supabase';
 import { useGame } from '../state/GameContext';
+import { Bar } from '../components/Hud';
 
 export function BagScreen() {
   const { items, inventory, refresh, say, character } = useGame();
@@ -22,6 +23,13 @@ export function BagScreen() {
     <section className="card">
       <h2>🎒 กระเป๋า</h2>
       <p>🪙 เหรียญ: <b>{character?.coins}</b> · ซื้อไอเทมได้ที่โรงเตี๊ยม</p>
+      {character && (
+        <div className="mini-bars">
+          <Bar value={character.hp} max={character.max_hp} kind="hp" />
+          <Bar value={character.mana} max={character.max_mana} kind="mana" />
+        </div>
+      )}
+      <p className="muted small">HP/Mana ใช้ในการดวล (PvP) เท่านั้น</p>
       {owned.length === 0 && <p className="muted">ยังไม่มีไอเทม ทำบทเรียนให้ได้ 3 ดาวเพื่อรับแอปเปิล!</p>}
       <ul className="list">
         {owned.map((i) => (

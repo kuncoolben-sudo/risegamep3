@@ -4,6 +4,7 @@ import { speak, canSpeak } from '../lib/tts';
 import { shuffled } from '../lib/util';
 import type { MatchRow } from '../lib/types';
 import { useGame } from '../state/GameContext';
+import { Bar } from '../components/Hud';
 
 const ACTIONS: { id: string; label: string; help: string }[] = [
   { id: 'attack', label: '⚔️ โจมตี', help: 'ไม่ใช้ Mana' },
@@ -93,7 +94,14 @@ export function PvpScreen({ onExit }: { onExit: () => void }) {
       <section className="card center">
         <h2>⚔️ ลานประลอง 1v1</h2>
         <p>ดวลกับผู้เล่นอีกคนแบบผลัดกันเล่น ตอบคำถามภาษาอังกฤษถูกเพื่อเพิ่มพลังโจมตี</p>
-        <p className="muted">ทุกคนเริ่มดวลด้วย HP 100 / Mana 40 เท่ากัน ไม่มีระบบธาตุ ไม่เสียสัตว์เลี้ยงเมื่อแพ้</p>
+        <p className="muted">HP/Mana ใช้ในการดวลเท่านั้น (ทำบทเรียนไม่เสียพลัง) ไม่มีระบบธาตุ ไม่เสียสัตว์เลี้ยงเมื่อแพ้</p>
+        {character && (
+          <div className="mini-bars">
+            <Bar value={character.hp} max={character.max_hp} kind="hp" />
+            <Bar value={character.mana} max={character.max_mana} kind="mana" />
+          </div>
+        )}
+        <p className="muted small">เริ่มดวลด้วยพลังที่เหลืออยู่ — พักที่แคมป์/โรงเตี๊ยม หรือใช้ไอเทมใน 🎒 เพื่อฟื้นฟูก่อนดวล (แพ้แล้ว HP ไม่ต่ำกว่า 25)</p>
         <p>ชนะ {character?.pvp_wins} · แพ้ {character?.pvp_losses}</p>
         <button className="btn big" disabled={busy} onClick={find}>หาคู่ต่อสู้</button>
         <button className="btn ghost" onClick={onExit}>กลับแผนที่</button>

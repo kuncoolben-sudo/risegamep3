@@ -12,7 +12,7 @@ export function Bar({ value, max, kind }: { value: number; max: number; kind: 'h
   );
 }
 
-export function Hud({ view, go, hp, mana, overlay }: { view: View; go: (v: View) => void; hp?: number; mana?: number; overlay?: boolean }) {
+export function Hud({ view, go, overlay }: { view: View; go: (v: View) => void; overlay?: boolean }) {
   const { character, pet, species, signOut } = useGame();
   if (!character) return null;
   const icon = species.find((s) => s.id === pet?.species_id)?.icon;
@@ -24,10 +24,6 @@ export function Hud({ view, go, hp, mana, overlay }: { view: View; go: (v: View)
           <b>{character.name}</b> <span title="สัตว์เลี้ยง">{icon}</span>
           <div className="coins">🪙 {character.coins}</div>
         </div>
-      </div>
-      <div className="hud-bars">
-        <Bar value={hp ?? character.hp} max={character.max_hp} kind="hp" />
-        <Bar value={mana ?? character.mana} max={character.max_mana} kind="mana" />
       </div>
       <nav>
         {([['world', '🌍', 'โลก 3D'], ['map', '🗺️', 'แผนที่ 2D'], ['pet', '🐾', 'สัตว์เลี้ยง'], ['bag', '🎒', 'กระเป๋า']] as const).map(([v, e, t]) => (
