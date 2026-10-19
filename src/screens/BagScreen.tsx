@@ -4,7 +4,7 @@ import { useGame } from '../state/GameContext';
 import { Bar } from '../components/Hud';
 
 export function BagScreen() {
-  const { items, inventory, refresh, say, character } = useGame();
+  const { items, inventory, refresh, say, character, pet } = useGame();
   const [busy, setBusy] = useState(false);
   const owned = items.filter((i) => (inventory.get(i.id) ?? 0) > 0);
 
@@ -23,13 +23,13 @@ export function BagScreen() {
     <section className="card">
       <h2>🎒 กระเป๋า</h2>
       <p>🪙 เหรียญ: <b>{character?.coins}</b> · ซื้อไอเทมได้ที่โรงเตี๊ยม</p>
-      {character && (
+      {pet && (
         <div className="mini-bars">
-          <Bar value={character.hp} max={character.max_hp} kind="hp" />
-          <Bar value={character.mana} max={character.max_mana} kind="mana" />
+          <Bar value={pet.hp} max={pet.max_hp} kind="hp" />
+          <Bar value={pet.mana} max={pet.max_mana} kind="mana" />
         </div>
       )}
-      <p className="muted small">HP/Mana ใช้ในการดวล (PvP) เท่านั้น</p>
+      <p className="muted small">HP/Mana เป็นของสัตว์เลี้ยง ใช้ในการดวล (PvP) เท่านั้น</p>
       {owned.length === 0 && <p className="muted">ยังไม่มีไอเทม ทำบทเรียนให้ได้ 3 ดาวเพื่อรับแอปเปิล!</p>}
       <ul className="list">
         {owned.map((i) => (

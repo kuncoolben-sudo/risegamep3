@@ -17,7 +17,7 @@ export function LocationPanel({ selected, onClose, onPlay, onPvp, empty }: {
   onPvp: () => void;
   empty?: ReactNode;
 }) {
-  const { lessons, items, states, character, progress, refresh, say } = useGame();
+  const { lessons, items, states, character, pet, progress, refresh, say } = useGame();
   const { byId, here } = useTravel();
   const [busy, setBusy] = useState(false);
 
@@ -57,10 +57,10 @@ export function LocationPanel({ selected, onClose, onPlay, onPvp, empty }: {
       <>
         {header}
         <p>{selected.blurb_th}</p>
-        {character && (
+        {pet && (
           <div className="mini-bars">
-            <Bar value={character.hp} max={character.max_hp} kind="hp" />
-            <Bar value={character.mana} max={character.max_mana} kind="mana" />
+            <Bar value={pet.hp} max={pet.max_hp} kind="hp" />
+            <Bar value={pet.mana} max={pet.max_mana} kind="mana" />
           </div>
         )}
         <button className="btn big" disabled={busy || (!inn && character?.rested_here)} onClick={() => act('rest', undefined, inn ? 'พักผ่อนจนเต็ม! 💤' : 'พักที่แคมป์แล้ว ✨')}>
