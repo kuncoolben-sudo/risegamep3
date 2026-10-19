@@ -62,7 +62,7 @@ function buildActivities(lesson, unitLessons) {
   const orderable = [
     ...(lesson.sentences ?? []),
     ...lessonWords.filter((w) => tokens(w).length >= 3),
-  ].filter((s) => !hasEllipsis(s) && tokens(s).length >= 2 && tokens(s).length <= 10);
+  ].filter((s) => !hasEllipsis(s) && tokens(s).length >= 2 && tokens(s).length <= 18);
   for (const s of pick(orderable, 3)) {
     acts.push({ type: 'sentence_order', payload: { say: s, answer: s } });
   }

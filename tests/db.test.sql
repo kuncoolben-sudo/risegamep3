@@ -31,7 +31,7 @@ begin
 end $$;
 
 -- ===== seed sanity =====
-select pg_temp.assert((select count(*) from public.locations) = 14, '14 locations');
+select pg_temp.assert((select count(*) from public.locations) = 15, '15 locations');
 select pg_temp.assert((select count(*) from public.activities) > 100, 'activities seeded');
 select pg_temp.assert(not exists (select 1 from public.lessons l where l.required and not exists (select 1 from public.activities a where a.lesson_id = l.id)), 'every required lesson has activities');
 
@@ -40,11 +40,11 @@ set role authenticated;
 select set_config('request.jwt.claim.sub', :'ua', false);
 
 select pg_temp.expect_err($$ select public.create_character('Ann', '{}', 'dragon') $$, 'invalid_pet');
-select pg_temp.expect_err($$ select public.create_character('', '{}', 'tiger') $$, 'invalid_name');
-select public.create_character('Ann', '{"hair":"long wavy hair"}', 'tiger');
-select pg_temp.expect_err($$ select public.create_character('Ann2', '{}', 'eagle') $$, 'character_exists');
+select pg_temp.expect_err($$ select public.create_character('', '{}', 'lion') $$, 'invalid_name');
+select public.create_character('Ann', '{"hair":"long wavy hair"}', 'lion');
+select pg_temp.expect_err($$ select public.create_character('Ann2', '{}', 'parrot') $$, 'character_exists');
 select pg_temp.assert((select count(*) from public.pets) = 1, 'exactly one pet');
-select pg_temp.expect_err($$ insert into public.pets (character_id, species_id) select id, 'eagle' from public.characters $$, 'permission denied');
+select pg_temp.expect_err($$ insert into public.pets (character_id, species_id) select id, 'parrot' from public.characters $$, 'permission denied');
 select pg_temp.expect_err($$ update public.characters set coins = 9999 $$, 'permission denied');
 select pg_temp.expect_err($$ select * from public.pvp_secrets $$, 'permission denied');
 
@@ -113,7 +113,7 @@ select pg_temp.expect_err($$ select public.buy_item('sandwich', 5) $$, 'not_enou
 reset role;
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'ub', false);
-select public.create_character('Ben', '{}', 'eagle');
+select public.create_character('Ben', '{}', 'parrot');
 select pg_temp.expect_err($$ select public.pvp_find_match() $$, 'locked');
 reset role;
 insert into public.lesson_progress (character_id, lesson_id, best_correct, total, stars)

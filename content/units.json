@@ -1,124 +1,850 @@
 {
-  "_note": "Transcribed from the Contents page of RISE English Grade 1 (Starter, Units 1-6). Nothing here is invented: only vocabulary and sentences visible on the Contents page. q/a pairs are question and answer as printed. Lines with '...' are skipped by the generator.",
-  "units": {
-    "start": [
-      { "id": "start-l1", "kind": "starter", "title": "Welcome back", "pages": "6-7",
-        "qa": [
-          { "q": "Where is the rice?", "a": "It's in A2." },
-          { "q": "What colour is Tom's hair?", "a": "His hair is brown." },
-          { "q": "Would you like some sandwiches?", "a": "Yes, please." }
-        ] }
+ "_note": "Transcribed from the Contents page of the Grade 3 book (Starter, Units 1-8). Only vocabulary and sentences printed on the Contents page are used; lines with '...' are skipped by the generator. Check against the full pages before classroom use.",
+ "units": {
+  "start": [
+   {
+    "id": "start-l1",
+    "kind": "starter",
+    "title": "Hello friends!",
+    "pages": "6-7",
+    "sentences": [
+     "Hello. I'm Betty.",
+     "My name's Mark.",
+     "Hi, Anna."
     ],
-    "u1": [
-      { "id": "u1-l1", "kind": "lesson1", "title": "Lesson 1: School subjects", "pages": "8-21",
-        "groups": [{ "label": "School subjects", "words": ["music", "art", "PE", "maths", "science", "English", "geography", "history"] }],
-        "qa": [{ "q": "When have we got English on Monday?", "a": "At 1 o'clock." }],
-        "sentences": ["I like English.", "He likes English.", "She likes English."] },
-      { "id": "u1-l2", "kind": "lesson2", "title": "Lesson 2: Places in school", "pages": "8-21",
-        "groups": [
-          { "label": "Places in school", "words": ["canteen", "playground", "library", "gym", "field", "science lab"] },
-          { "label": "Activity", "words": ["do an experiment"] }
-        ] },
-      { "id": "u1-chat", "kind": "chat", "title": "Chat Time: Talking about school subjects", "pages": "8-21",
-        "groups": [{ "label": "Adjectives", "words": ["interesting", "boring", "fun", "difficult", "easy"] }],
-        "qa": [
-          { "q": "Do you like science?", "a": "Yes, I do. I think it's interesting." },
-          { "q": "Do you like science?", "a": "No, I don't. I think it's difficult." }
-        ] },
-      { "id": "u1-clil", "kind": "clil", "title": "CLIL: Duration of time", "pages": "8-21",
-        "groups": [{ "label": "Duration of time", "words": ["hour", "minute"] }] },
-      { "id": "u1-proj", "kind": "project", "title": "Project Time: My friends", "pages": "8-21", "project": "My friends", "required": false }
-    ],
-    "u2": [
-      { "id": "u2-l1", "kind": "lesson1", "title": "Lesson 1: Numbers and heights", "pages": "22-35",
-        "qa": [{ "q": "How tall is Dan?", "a": "He's 150 centimetres tall." }],
-        "sentences": ["She's the tallest girl.", "He's the shortest boy."] },
-      { "id": "u2-l2", "kind": "lesson2", "title": "Lesson 2: Appearance", "pages": "22-35",
-        "groups": [{ "label": "Appearance", "words": ["short straight hair", "long straight hair", "short wavy hair", "long wavy hair", "short curly hair", "long curly hair", "moustache", "beard"] }],
-        "qa": [{ "q": "What does Paul look like?", "a": "He's a short boy with short blonde hair. He's got blue eyes." }],
-        "sentences": ["She's a short woman with short straight hair."] },
-      { "id": "u2-chat", "kind": "chat", "title": "Chat Time: Talking about phone numbers", "pages": "22-35",
-        "qa": [{ "q": "What's your teacher's phone number?", "a": "It's 0601 776 8500." }] },
-      { "id": "u2-clil", "kind": "clil", "title": "CLIL: Parts of the body", "pages": "22-35",
-        "groups": [{ "label": "Parts of the body", "words": ["elbows", "wrists", "knees", "neck", "shoulders", "back"] }] },
-      { "id": "u2-proj", "kind": "project", "title": "Project Time: A missing person poster", "pages": "22-35", "project": "A missing person poster", "required": false }
-    ],
-    "u3": [
-      { "id": "u3-l1", "kind": "lesson1", "title": "Lesson 1: Food", "pages": "36-49",
-        "groups": [{ "label": "Food", "words": ["rice", "bread", "chicken", "cheese", "pasta", "soup", "watermelon", "tomato juice"] }],
-        "qa": [
-          { "q": "How much chicken is there?", "a": "A little." },
-          { "q": "How much chicken is there?", "a": "A lot." }
-        ] },
-      { "id": "u3-l2", "kind": "lesson2", "title": "Lesson 2: Food and containers", "pages": "36-49",
-        "groups": [{ "label": "Food and containers", "words": ["a bottle of water", "a carton of milk", "a pot of yoghurt", "a jar of jam", "a bottle of lemonade", "a can of cola", "a plate of pasta", "a bowl of cereal"] }],
-        "qa": [{ "q": "Is there a lot of water?", "a": "Yes, there is." }],
-        "sentences": ["There are six bottles."] },
-      { "id": "u3-chat", "kind": "chat", "title": "Chat Time: Buying food", "pages": "36-49",
-        "groups": [{ "label": "Food and containers", "words": ["a cup of tea", "a piece of cake", "a slice of pizza", "a glass of orange juice"] }],
-        "qa": [{ "q": "What would you like?", "a": "Can I have a slice of pizza, please?" }],
-        "sentences": ["Anything else?"] },
-      { "id": "u3-clil", "kind": "clil", "title": "CLIL: Healthy or unhealthy food", "pages": "36-49",
-        "groups": [{ "label": "Healthy or unhealthy food", "words": ["chocolate", "pizza", "ice cream", "crisps", "strawberries", "tomatoes", "instant noodles", "fizzy drinks"] }] },
-      { "id": "u3-proj", "kind": "project", "title": "Project Time: What's in my fridge?", "pages": "36-49", "project": "What's in my fridge?", "required": false }
-    ],
-    "u4": [
-      { "id": "u4-l1", "kind": "lesson1", "title": "Lesson 1: Animals", "pages": "50-63",
-        "groups": [{ "label": "Animals", "words": ["eagle", "bat", "crocodile", "tiger", "zebra", "rhino", "elephant", "dolphin"] }],
-        "qa": [{ "q": "What does an eagle eat?", "a": "It eats meat and fish." }] },
-      { "id": "u4-l2", "kind": "lesson2", "title": "Lesson 2: Animal habitats", "pages": "50-63",
-        "groups": [
-          { "label": "Animal", "words": ["camel"] },
-          { "label": "Animal habitats", "words": ["in the river", "in the jungle", "in the sea", "in the mountains", "in the grasslands", "in a cave"] }
-        ],
-        "qa": [
-          { "q": "Does a bat live in the desert?", "a": "No, it doesn't. It lives in a cave." },
-          { "q": "Does a giraffe sleep during the day?", "a": "No, it doesn't. It sleeps at night." }
-        ] },
-      { "id": "u4-chat", "kind": "chat", "title": "Chat Time: Comparing animals", "pages": "50-63",
-        "groups": [{ "label": "Animals", "words": ["blue whale", "shark", "chimpanzee"] }],
-        "sentences": ["Which animal is bigger, an elephant or a shark?", "Which animal is the biggest in the world?"] },
-      { "id": "u4-clil", "kind": "clil", "title": "CLIL: Five groups of vertebrates", "pages": "50-63",
-        "groups": [
-          { "label": "Five groups of vertebrates", "words": ["mammals", "reptiles", "amphibians", "birds", "fish"] },
-          { "label": "Animal body parts", "words": ["wings", "fur", "scales", "fins"] },
-          { "label": "Animal action", "words": ["lay eggs"] }
-        ] },
-      { "id": "u4-proj", "kind": "project", "title": "Project Time: Animal fact file", "pages": "50-63", "project": "Animal fact file", "required": false }
-    ],
-    "u5": [
-      { "id": "u5-l1", "kind": "lesson1", "title": "Lesson 1: Places in town", "pages": "64-77",
-        "groups": [{ "label": "Places in town", "words": ["bookshop", "restaurant", "cinema", "train station", "shopping centre", "post office", "police station", "bus stop"] }],
-        "qa": [{ "q": "Is there a bookshop in the town?", "a": "Yes, there is. It's in front of the shopping centre." }] },
-      { "id": "u5-l2", "kind": "lesson2", "title": "Lesson 2: Talking about addresses", "pages": "64-77",
-        "qa": [{ "q": "What's the address of the library?", "a": "It's 17 High Street, London." }] },
-      { "id": "u5-chat", "kind": "chat", "title": "Chat Time: Talking about my town", "pages": "64-77",
-        "groups": [{ "label": "Places in town", "words": ["farmers' market", "bakery", "café", "flower market"] }],
-        "qa": [{ "q": "What's your town famous for?", "a": "It's famous for its flowers." }] },
-      { "id": "u5-clil", "kind": "clil", "title": "CLIL: Map key", "pages": "64-77",
-        "groups": [{ "label": "Map key", "words": ["a map key"] }] },
-      { "id": "u5-proj", "kind": "project", "title": "Project Time: Our town poster", "pages": "64-77", "project": "Our town poster", "required": false }
-    ],
-    "u6": [
-      { "id": "u6-l1", "kind": "lesson1", "title": "Lesson 1: Sport and equipment", "pages": "78-91",
-        "groups": [
-          { "label": "Sport", "words": ["table tennis", "baseball", "volleyball", "badminton"] },
-          { "label": "Sport equipment", "words": ["net", "shuttlecock", "trainers", "racket"] }
-        ],
-        "qa": [{ "q": "What do you need to play baseball?", "a": "I need a ball and a bat." }] },
-      { "id": "u6-l2", "kind": "lesson2", "title": "Lesson 2: Playing sport", "pages": "78-91",
-        "groups": [{ "label": "Playing sport", "words": ["win the race", "hit the ball", "kick the ball", "shoot the ball", "catch the ball", "throw the ball", "bounce the ball"] }],
-        "qa": [
-          { "q": "Do you know the boy who's catching the ball?", "a": "Yes, I do. He's John's brother." },
-          { "q": "Do you mean the man who's bouncing the ball?", "a": "Yes, I do." }
-        ],
-        "sentences": ["Is that May's father?"] },
-      { "id": "u6-chat", "kind": "chat", "title": "Chat Time: Making suggestions", "pages": "78-91",
-        "groups": [{ "label": "Activities", "words": ["go for a walk", "go for a ride", "go for a swim", "go skiing", "go running", "go skateboarding"] }],
-        "sentences": ["Why don't we go for a ride?", "How about we go skateboarding?"] },
-      { "id": "u6-clil", "kind": "clil", "title": "CLIL: Bar graph", "pages": "78-91",
-        "sentences": ["Which is the most popular sport?", "Which is the least popular sport?", "Which sport has got two votes?"] },
-      { "id": "u6-proj", "kind": "project", "title": "Project Time: Our favourite sport", "pages": "78-91", "project": "Our favourite sport", "required": false }
+    "qa": [
+     {
+      "q": "How are you?",
+      "a": "I'm good."
+     },
+     {
+      "q": "What colour is balloon number five?",
+      "a": "It's purple."
+     },
+     {
+      "q": "What day is it today?",
+      "a": "It's Monday."
+     },
+     {
+      "q": "What do you do on Monday?",
+      "a": "I ride a bike."
+     }
     ]
-  }
+   }
+  ],
+  "u1": [
+   {
+    "id": "u1-l1",
+    "kind": "lesson1",
+    "title": "Lesson 1: Countries",
+    "pages": "8-21",
+    "groups": [
+     {
+      "label": "Countries",
+      "words": [
+       "the United Kingdom",
+       "Spain",
+       "China",
+       "Thailand",
+       "India",
+       "Japan"
+      ]
+     }
+    ],
+    "sentences": [
+     "I'm from the United Kingdom.",
+     "He's from Spain.",
+     "She's from China."
+    ],
+    "qa": [
+     {
+      "q": "Where are you from?",
+      "a": "I'm from China."
+     }
+    ]
+   },
+   {
+    "id": "u1-l2",
+    "kind": "lesson2",
+    "title": "Lesson 2: The time and routines",
+    "pages": "8-21",
+    "groups": [
+     {
+      "label": "Routines",
+      "words": [
+       "get up",
+       "have breakfast",
+       "go to school",
+       "go home",
+       "have dinner",
+       "go to bed"
+      ]
+     }
+    ],
+    "sentences": [
+     "It's two o'clock.",
+     "It's three o'clock.",
+     "It's four o'clock.",
+     "What time is it, please?"
+    ]
+   },
+   {
+    "id": "u1-chat",
+    "kind": "chat",
+    "title": "Chat Time: Asking the time",
+    "pages": "8-21",
+    "qa": [
+     {
+      "q": "Excuse me, what's the time, please?",
+      "a": "It's five o'clock."
+     }
+    ]
+   },
+   {
+    "id": "u1-clil",
+    "kind": "clil",
+    "title": "CLIL: Time around the world",
+    "pages": "8-21",
+    "qa": [
+     {
+      "q": "What time is it in New York?",
+      "a": "It's three o'clock in the morning."
+     }
+    ]
+   },
+   {
+    "id": "u1-proj",
+    "kind": "project",
+    "title": "Project Time: My day craft",
+    "pages": "8-21",
+    "project": "My day craft",
+    "required": false
+   }
+  ],
+  "u2": [
+   {
+    "id": "u2-l1",
+    "kind": "lesson1",
+    "title": "Lesson 1: The weather and months",
+    "pages": "22-35",
+    "groups": [
+     {
+      "label": "The weather",
+      "words": [
+       "rainy",
+       "snowy",
+       "cloudy",
+       "stormy",
+       "warm",
+       "cool"
+      ]
+     },
+     {
+      "label": "Months",
+      "words": [
+       "January",
+       "February",
+       "March",
+       "April",
+       "May",
+       "June",
+       "July",
+       "August",
+       "September",
+       "October",
+       "November",
+       "December"
+      ]
+     }
+    ],
+    "sentences": [
+     "What's the weather like today?"
+    ]
+   },
+   {
+    "id": "u2-l2",
+    "kind": "lesson2",
+    "title": "Lesson 2: Seasons",
+    "pages": "22-35",
+    "groups": [
+     {
+      "label": "Seasons",
+      "words": [
+       "spring",
+       "summer",
+       "autumn",
+       "winter"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "What's the weather like in winter?",
+      "a": "It's cold."
+     },
+     {
+      "q": "When's winter in the UK?",
+      "a": "It's in December, January and February."
+     }
+    ]
+   },
+   {
+    "id": "u2-chat",
+    "kind": "chat",
+    "title": "Chat Time: Weather report",
+    "pages": "22-35",
+    "sentences": [
+     "In the afternoon, it will be cloudy."
+    ]
+   },
+   {
+    "id": "u2-clil",
+    "kind": "clil",
+    "title": "CLIL: Types of trees",
+    "pages": "22-35",
+    "groups": [
+     {
+      "label": "Types of trees",
+      "words": [
+       "deciduous trees",
+       "evergreen trees"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "u2-proj",
+    "kind": "project",
+    "title": "Project Time: My favourite season poster",
+    "pages": "22-35",
+    "project": "My favourite season poster",
+    "required": false
+   }
+  ],
+  "u3": [
+   {
+    "id": "u3-l1",
+    "kind": "lesson1",
+    "title": "Lesson 1: Appearance",
+    "pages": "36-49",
+    "groups": [
+     {
+      "label": "Appearance",
+      "words": [
+       "tall",
+       "short",
+       "young",
+       "old",
+       "thin",
+       "plump",
+       "fat"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "Is he tall?",
+      "a": "Yes, he is."
+     },
+     {
+      "q": "Is he tall?",
+      "a": "No, he isn't."
+     }
+    ]
+   },
+   {
+    "id": "u3-l2",
+    "kind": "lesson2",
+    "title": "Lesson 2: Numbers 30-100",
+    "pages": "36-49",
+    "qa": [
+     {
+      "q": "How old is Harry's mum?",
+      "a": "She's 37 years old."
+     },
+     {
+      "q": "How old is your dad?",
+      "a": "He's 39 years old."
+     }
+    ]
+   },
+   {
+    "id": "u3-chat",
+    "kind": "chat",
+    "title": "Chat Time: Asking for synonyms",
+    "pages": "36-49",
+    "groups": [
+     {
+      "label": "Asking for synonyms",
+      "words": [
+       "dad",
+       "daddy",
+       "papa",
+       "mum",
+       "mummy",
+       "mama",
+       "grandaddy",
+       "grandad",
+       "grandma",
+       "granny",
+       "gran"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "What's another word for 'father'?",
+      "a": "Dad."
+     }
+    ]
+   },
+   {
+    "id": "u3-clil",
+    "kind": "clil",
+    "title": "CLIL: Weight",
+    "pages": "36-49",
+    "groups": [
+     {
+      "label": "Weight",
+      "words": [
+       "weigh",
+       "1 kilogram",
+       "weighing scale",
+       "40 kilograms"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "How much do you weigh?",
+      "a": "I weigh 42 kilograms."
+     }
+    ]
+   },
+   {
+    "id": "u3-proj",
+    "kind": "project",
+    "title": "Project Time: My family book",
+    "pages": "36-49",
+    "project": "My family book",
+    "required": false
+   }
+  ],
+  "u4": [
+   {
+    "id": "u4-l1",
+    "kind": "lesson1",
+    "title": "Lesson 1: Places and prepositions",
+    "pages": "50-63",
+    "groups": [
+     {
+      "label": "Places",
+      "words": [
+       "bank",
+       "supermarket",
+       "hospital",
+       "shop",
+       "swimming pool"
+      ]
+     },
+     {
+      "label": "Prepositions",
+      "words": [
+       "next to",
+       "in front of",
+       "behind"
+      ]
+     }
+    ],
+    "sentences": [
+     "Excuse me, where's the bank, please?"
+    ]
+   },
+   {
+    "id": "u4-l2",
+    "kind": "lesson2",
+    "title": "Lesson 2: Means of transport",
+    "pages": "50-63",
+    "groups": [
+     {
+      "label": "Means of transport",
+      "words": [
+       "boat",
+       "plane",
+       "bus",
+       "car"
+      ]
+     }
+    ],
+    "sentences": [
+     "He goes to school by boat.",
+     "She goes to school by boat."
+    ],
+    "qa": [
+     {
+      "q": "Does Tom go to school by car?",
+      "a": "Yes, he does."
+     },
+     {
+      "q": "Does Tom go to school by car?",
+      "a": "No, he doesn't."
+     }
+    ]
+   },
+   {
+    "id": "u4-chat",
+    "kind": "chat",
+    "title": "Chat Time: Asking about places",
+    "pages": "50-63",
+    "qa": [
+     {
+      "q": "Excuse me, is there a bank near here?",
+      "a": "Yes, there is. It's behind the supermarket."
+     }
+    ]
+   },
+   {
+    "id": "u4-clil",
+    "kind": "clil",
+    "title": "CLIL: Unplugged coding",
+    "pages": "50-63",
+    "groups": [
+     {
+      "label": "Unplugged coding",
+      "words": [
+       "move up one square",
+       "move down two squares",
+       "move left one square",
+       "move right two squares"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "u4-proj",
+    "kind": "project",
+    "title": "Project Time: My town",
+    "pages": "50-63",
+    "project": "My town",
+    "required": false
+   }
+  ],
+  "u5": [
+   {
+    "id": "u5-l1",
+    "kind": "lesson1",
+    "title": "Lesson 1: Food",
+    "pages": "64-77",
+    "groups": [
+     {
+      "label": "Food",
+      "words": [
+       "chicken",
+       "rice",
+       "hot dogs",
+       "soup",
+       "ice cream",
+       "chocolate",
+       "chips",
+       "sandwiches"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "Would you like some chicken?",
+      "a": "Yes, please."
+     },
+     {
+      "q": "Would you like some chicken?",
+      "a": "No, thank you."
+     }
+    ]
+   },
+   {
+    "id": "u5-l2",
+    "kind": "lesson2",
+    "title": "Lesson 2: Ordinal numbers",
+    "pages": "64-77",
+    "qa": [
+     {
+      "q": "When's your birthday, Ben?",
+      "a": "It's on the 3rd of August."
+     }
+    ],
+    "sentences": [
+     "What food would you like for your birthday?"
+    ]
+   },
+   {
+    "id": "u5-chat",
+    "kind": "chat",
+    "title": "Chat Time: Inviting",
+    "pages": "64-77",
+    "qa": [
+     {
+      "q": "Would you like to come to my 8th birthday party?",
+      "a": "Sure. When is it?"
+     }
+    ]
+   },
+   {
+    "id": "u5-clil",
+    "kind": "clil",
+    "title": "CLIL: Personal information",
+    "pages": "64-77",
+    "groups": [
+     {
+      "label": "Personal information",
+      "words": [
+       "full name",
+       "age",
+       "full birthday",
+       "address",
+       "telephone number"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "u5-proj",
+    "kind": "project",
+    "title": "Project Time: Birthday invitation card",
+    "pages": "64-77",
+    "project": "Birthday invitation card",
+    "required": false
+   }
+  ],
+  "u6": [
+   {
+    "id": "u6-l1",
+    "kind": "lesson1",
+    "title": "Lesson 1: Routines and the time",
+    "pages": "78-91",
+    "groups": [
+     {
+      "label": "Routines",
+      "words": [
+       "have a shower",
+       "get dressed",
+       "do homework",
+       "watch TV"
+      ]
+     },
+     {
+      "label": "The time",
+      "words": [
+       "a quarter past nine",
+       "half past nine",
+       "a quarter to ten",
+       "twenty to ten"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "What's the time, please?",
+      "a": "It's 7:30. It's time to have breakfast."
+     }
+    ]
+   },
+   {
+    "id": "u6-l2",
+    "kind": "lesson2",
+    "title": "Lesson 2: Housework",
+    "pages": "78-91",
+    "groups": [
+     {
+      "label": "Housework",
+      "words": [
+       "wash the dishes",
+       "water the plants",
+       "walk the dog",
+       "feed the dog",
+       "make my bed",
+       "make breakfast"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "Do you wash the dishes at home?",
+      "a": "Yes, I do."
+     },
+     {
+      "q": "Do you wash the dishes at home?",
+      "a": "No, I don't."
+     },
+     {
+      "q": "What do you do in the morning?",
+      "a": "I make breakfast."
+     }
+    ]
+   },
+   {
+    "id": "u6-chat",
+    "kind": "chat",
+    "title": "Chat Time: Talking about frequency",
+    "pages": "78-91",
+    "groups": [
+     {
+      "label": "Talking about frequency",
+      "words": [
+       "brush my teeth",
+       "wash my face",
+       "wash my hands",
+       "once a day",
+       "twice a day",
+       "three times a day"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "How often do you brush your teeth?",
+      "a": "I brush my teeth three times a day."
+     }
+    ]
+   },
+   {
+    "id": "u6-clil",
+    "kind": "clil",
+    "title": "CLIL: Exploring time",
+    "pages": "78-91",
+    "groups": [
+     {
+      "label": "Exploring time",
+      "words": [
+       "60 seconds",
+       "60 minutes",
+       "24 hours",
+       "7 days",
+       "28, 29, 30 or 31 days",
+       "12 months"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "u6-proj",
+    "kind": "project",
+    "title": "Project Time: My daily routine chart",
+    "pages": "78-91",
+    "project": "My daily routine chart",
+    "required": false
+   }
+  ],
+  "u7": [
+   {
+    "id": "u7-l1",
+    "kind": "lesson1",
+    "title": "Lesson 1: Beach activities and clothes",
+    "pages": "92-105",
+    "groups": [
+     {
+      "label": "Activities",
+      "words": [
+       "playing in the sand",
+       "swimming in the sea",
+       "collecting shells",
+       "holding a bucket",
+       "eating watermelon",
+       "riding a horse"
+      ]
+     },
+     {
+      "label": "Clothes",
+      "words": [
+       "shorts",
+       "skirt"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "Do you see the boy in the blue shorts?",
+      "a": "Yes, I do."
+     }
+    ]
+   },
+   {
+    "id": "u7-l2",
+    "kind": "lesson2",
+    "title": "Lesson 2: Activities",
+    "pages": "92-105",
+    "groups": [
+     {
+      "label": "Activities",
+      "words": [
+       "fishing",
+       "going for a walk",
+       "having a picnic",
+       "painting pictures",
+       "taking photos",
+       "playing Frisbee",
+       "playing the guitar",
+       "playing the piano"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "Are they playing the piano?",
+      "a": "Yes, they are."
+     },
+     {
+      "q": "Are they playing the piano?",
+      "a": "No, they aren't."
+     },
+     {
+      "q": "Is she cooking?",
+      "a": "Yes, she is."
+     },
+     {
+      "q": "Is she cooking?",
+      "a": "No, she isn't."
+     }
+    ]
+   },
+   {
+    "id": "u7-chat",
+    "kind": "chat",
+    "title": "Chat Time: Talking about hobbies",
+    "pages": "92-105",
+    "qa": [
+     {
+      "q": "What's your favourite hobby?",
+      "a": "I like swimming."
+     },
+     {
+      "q": "What about you?",
+      "a": "I like riding a bike."
+     }
+    ]
+   },
+   {
+    "id": "u7-clil",
+    "kind": "clil",
+    "title": "CLIL: Sunrise and sunset",
+    "pages": "92-105",
+    "sentences": [
+     "The Sun rises in the east in the morning and sets in the west in the evening."
+    ]
+   },
+   {
+    "id": "u7-proj",
+    "kind": "project",
+    "title": "Project Time: My special photos",
+    "pages": "92-105",
+    "project": "My special photos",
+    "required": false
+   }
+  ],
+  "u8": [
+   {
+    "id": "u8-l1",
+    "kind": "lesson1",
+    "title": "Lesson 1: Animals and adjectives",
+    "pages": "106-119",
+    "groups": [
+     {
+      "label": "Animals",
+      "words": [
+       "frog",
+       "penguin",
+       "lion",
+       "hippo",
+       "monkey",
+       "giraffe",
+       "snake",
+       "parrot"
+      ]
+     },
+     {
+      "label": "Adjectives",
+      "words": [
+       "little",
+       "cute",
+       "strong",
+       "fat",
+       "funny",
+       "tall",
+       "ugly",
+       "beautiful"
+      ]
+     }
+    ],
+    "qa": [
+     {
+      "q": "Do you enjoy reading stories?",
+      "a": "Yes, I do."
+     }
+    ]
+   },
+   {
+    "id": "u8-l2",
+    "kind": "lesson2",
+    "title": "Lesson 2: Stories",
+    "pages": "106-119",
+    "groups": [
+     {
+      "label": "Stories",
+      "words": [
+       "a pirate's ship",
+       "a wizard's school",
+       "a prince's castle",
+       "an alien's spaceship",
+       "a monster's house",
+       "a clown in a circus"
+      ]
+     }
+    ],
+    "sentences": [
+     "What's your favourite story?",
+     "What's it about?"
+    ]
+   },
+   {
+    "id": "u8-chat",
+    "kind": "chat",
+    "title": "Chat Time: Agreeing and disagreeing",
+    "pages": "106-119",
+    "groups": [
+     {
+      "label": "Agreeing and disagreeing",
+      "words": [
+       "watching cartoons",
+       "reading comic books",
+       "playing computer games",
+       "listening to music",
+       "doing jigsaw puzzles"
+      ]
+     }
+    ],
+    "sentences": [
+     "I love watching cartoons.",
+     "So do I.",
+     "Oh, I don't."
+    ]
+   },
+   {
+    "id": "u8-clil",
+    "kind": "clil",
+    "title": "CLIL: Living things and nonliving things",
+    "pages": "106-119",
+    "sentences": [
+     "Living things need food, water and air.",
+     "Nonliving things are not alive."
+    ]
+   },
+   {
+    "id": "u8-proj",
+    "kind": "project",
+    "title": "Project Time: Role play",
+    "pages": "106-119",
+    "project": "Role play",
+    "required": false
+   }
+  ]
+ }
 }
