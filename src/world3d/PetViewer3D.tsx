@@ -6,7 +6,7 @@ import { FantasyPet } from './FantasyPet';
 import { clampStage } from './pets';
 
 // Soft blob under the pet so it does not float.
-function Shadow({ r }: { r: number }) {
+export function Shadow({ r }: { r: number }) {
   const tex = useMemo(() => {
     const c = document.createElement('canvas');
     c.width = c.height = 64;

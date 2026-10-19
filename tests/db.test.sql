@@ -117,7 +117,7 @@ select public.buy_item('sandwich', 2);
 select pg_temp.assert((select coins from public.characters) = 13, 'bought 2 sandwiches');
 select pg_temp.expect_err($$ select public.buy_item('sandwich', 5) $$, 'not_enough_coins');
 
--- ===== PvP =====
+-- ===== PvP: automatic duels =====
 reset role;
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'ub', false);
@@ -126,61 +126,77 @@ select pg_temp.expect_err($$ select public.pvp_find_match() $$, 'locked');
 reset role;
 insert into public.lesson_progress (character_id, lesson_id, best_correct, total, stars)
 select c.id, 'start-l1', 1, 1, 3 from public.characters c where c.user_id = :'ub';
-set role authenticated;
-
-reset role;
 update public.pets set hp = 60, mana = 30 where character_id = (select id from public.characters where user_id = :'ua');
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'ua', false);
 create temp table m as select public.pvp_find_match() as id;
 select pg_temp.assert((select status from public.pvp_matches where id = (select id from m)) = 'waiting', 'waiting for opponent');
+select pg_temp.assert((select public.pvp_find_match()) = (select id from m), 'asking again returns the same waiting match');
+
+-- the second fighter starts the duel and it is over before the call returns
 select set_config('request.jwt.claim.sub', :'ub', false);
 select pg_temp.assert((select public.pvp_find_match()) = (select id from m), 'B joins the same match');
-select pg_temp.assert((select status from public.pvp_matches) = 'active', 'match active');
-select pg_temp.assert((select p1_hp = 60 and p1_mana = 30 and p2_hp = 100 and p2_mana = 40 from public.pvp_matches), 'match starts from current HP/Mana');
-select pg_temp.expect_err($$ select public.use_item('apple') $$, 'in_match');
-select pg_temp.expect_err($$ select public.rest() $$, 'in_match');
-select pg_temp.assert((select q_choices is not null and q_prompt is not null from public.pvp_matches), 'question set');
-
--- not B's turn first
-select pg_temp.expect_err(format($$ select public.pvp_act(%L, 'attack', 'x') $$, (select id from m)), 'not_your_turn');
-select set_config('request.jwt.claim.sub', :'ua', false);
-select public.pvp_act((select id from m), 'attack', 'definitely wrong');       -- wrong answer = 0.75x damage, still hits
-select pg_temp.assert((select p2_hp from public.pvp_matches) = 100 - round(14 * 0.75), 'wrong answer weak hit');
-select set_config('request.jwt.claim.sub', :'ub', false);
-select pg_temp.expect_err(format($$ select public.pvp_act(%L, 'skill', 'x') $$, (select id from m)), 'skill_locked');   -- B is stage 1
-select pg_temp.expect_err(format($$ select public.pvp_act(%L, 'dance', 'x') $$, (select id from m)), 'invalid_action');
-select public.pvp_act((select id from m), 'guard');
-select set_config('request.jwt.claim.sub', :'ua', false);
-select pg_temp.expect_err(format($$ select public.pvp_act(%L, 'attack', 'x') $$, (select id from m)), 'not_your_turn') where false;
-
--- play to the end: A always answers correctly (answer read as superuser), B guards/focuses
+select pg_temp.assert((select status = 'finished' and winner is not null and jsonb_array_length(log) between 2 and 60 from public.pvp_matches), 'duel played at once');
+select pg_temp.assert((select p1_species = 'lion' and p2_species = 'parrot' and p1_stage >= 1 and p2_stage = 1 from public.pvp_matches), 'species and stages recorded');
+select pg_temp.assert((select (log -> 0) ? 'n' and (log -> 0) ? 'by' and (log -> 0) ? 'kind' and (log -> 0) ? 'dmg' and (log -> 0) ? 'hp1' from public.pvp_matches), 'log entries have the replay fields');
 reset role;
+select pg_temp.expect_err($$ select public.pvp_act(null::uuid, 'attack', 'x') $$, 'does not exist');
+select pg_temp.expect_err($$ select public.pvp_forfeit(null::uuid) $$, 'does not exist');
+select pg_temp.expect_err($$ select public.pvp_claim_timeout(null::uuid) $$, 'does not exist');
+
+-- stats = 10 + 2 per star on every stat, taken from the best result of each lesson
+select pg_temp.assert((select (p1_stats ->> 'stars')::int = (select coalesce(sum(stars), 0) from public.lesson_progress where character_id = p1)
+                       and (p1_stats ->> 'atk')::int = 10 + 2 * (p1_stats ->> 'stars')::int
+                       and (p1_stats ->> 'spd')::int = (p1_stats ->> 'atk')::int and (p1_stats ->> 'def')::int = (p1_stats ->> 'atk')::int
+                       from public.pvp_matches), 'A stats come from stars');
+select pg_temp.assert((select (p2_stats ->> 'stars')::int = 3 and (p2_stats ->> 'atk')::int = 16 and (p2_stats ->> 'spd')::int = 16 and (p2_stats ->> 'def')::int = 16 from public.pvp_matches), 'B: 3 stars = 16 on each stat');
+select pg_temp.assert((select (p1_stats ->> 'hp0')::int = 60 and (p1_stats ->> 'mana0')::int = 30 and (p2_stats ->> 'hp0')::int = 100 and (p2_stats ->> 'mana0')::int = 40 from public.pvp_matches), 'duel starts from the pets current HP/Mana');
+-- the log is consistent: HP only goes down, the last entry is the final state, powers only up to the actor's stage
+select pg_temp.assert((select bool_and(coalesce(hp1 <= lag_hp1, true) and coalesce(hp2 <= lag_hp2, true))
+                       from (select (e ->> 'hp1')::int as hp1, (e ->> 'hp2')::int as hp2,
+                                    lag((e ->> 'hp1')::int) over (order by (e ->> 'n')::int) as lag_hp1,
+                                    lag((e ->> 'hp2')::int) over (order by (e ->> 'n')::int) as lag_hp2
+                             from public.pvp_matches, jsonb_array_elements(log) e) x), 'HP never goes up during a duel');
+select pg_temp.assert((select (log -> -1 ->> 'hp1')::int = p1_hp and (log -> -1 ->> 'hp2')::int = p2_hp and (p1_hp = 0 or p2_hp = 0 or jsonb_array_length(log) = 60) from public.pvp_matches), 'last log entry is the final state');
+select pg_temp.assert(not exists (select 1 from public.pvp_matches, jsonb_array_elements(log) e
+                                   where (e ->> 'kind' = 'power' and ((e ->> 'form')::int < 1 or (e ->> 'form')::int > case when (e ->> 'by')::int = 1 then p1_stage else p2_stage end))
+                                      or (e ->> 'kind' = 'attack' and e ->> 'form' is not null)), 'powers stay within the unlocked forms');
+select pg_temp.assert((select pvp_wins from public.characters where id = (select winner from public.pvp_matches)) = 1
+                       and (select sum(pvp_wins) = 1 and sum(pvp_losses) = 1 from public.characters), 'win/loss recorded');
+select pg_temp.assert((select c.hp = greatest(25, pm.p1_hp) and c.mana = pm.p1_mana from public.pvp_matches pm join public.pets c on c.character_id = pm.p1), 'A pet keeps the duel HP/Mana (floor 25)');
+select pg_temp.assert((select c.hp = greatest(25, pm.p2_hp) and c.mana = pm.p2_mana from public.pvp_matches pm join public.pets c on c.character_id = pm.p2), 'B pet keeps the duel HP/Mana (floor 25)');
+select pg_temp.assert(not public._in_active_match((select id from public.characters where user_id = :'ua')), 'nobody is stuck in a match');
+
+-- many duels with set stats: the stronger and faster pet wins, a stage-3 pet casts every form it has, a stage-1 pet only its first
+create temp table sim (a_wins boolean, a_forms int[], b_forms int[], a_acts int, b_acts int);
 do $$
-declare v_m uuid := (select id from m); v_turn uuid; v_ans text; i int := 0; ua uuid := '00000000-0000-0000-0000-00000000000a'; ub uuid := '00000000-0000-0000-0000-00000000000b';
+declare
+  ua_c uuid := (select id from public.characters where user_id = '00000000-0000-0000-0000-00000000000a');
+  ub_c uuid := (select id from public.characters where user_id = '00000000-0000-0000-0000-00000000000b');
+  v_id uuid; v_m public.pvp_matches%rowtype; i int;
 begin
-  loop
-    i := i + 1; exit when i > 60;
-    select turn into v_turn from public.pvp_matches where id = v_m;
-    exit when v_turn is null;
-    select q_answer into v_ans from public.pvp_secrets where match_id = v_m;
-    if v_turn = (select id from public.characters where user_id = ua) then
-      perform set_config('request.jwt.claim.sub', ua::text, true);
-      perform public.pvp_act(v_m, case when i % 3 = 0 then 'skill' else 'attack' end, v_ans);
-    else
-      perform set_config('request.jwt.claim.sub', ub::text, true);
-      perform public.pvp_act(v_m, case when i % 2 = 0 then 'focus' else 'guard' end, v_ans);
-    end if;
+  for i in 1..40 loop
+    insert into public.pvp_matches (p1, p2, p1_name, p2_name, p1_pet, p2_pet, p1_species, p2_species, p1_stage, p2_stage, p1_hp, p2_hp, p1_mana, p2_mana, status, p1_stats, p2_stats)
+    values (ua_c, ub_c, 'A', 'B', 'x', 'y', 'skyra', 'blazion', 3, 1, 100, 100, 40, 40, 'active',
+            '{"stars":40,"atk":90,"spd":90,"def":90,"max_mana":40}', '{"stars":3,"atk":16,"spd":16,"def":16,"max_mana":40}')
+    returning id into v_id;
+    perform public._pvp_simulate(v_id);
+    select * into v_m from public.pvp_matches where id = v_id;
+    insert into sim values (
+      v_m.winner = ua_c,
+      array(select (e ->> 'form')::int from jsonb_array_elements(v_m.log) e where e ->> 'kind' = 'power' and (e ->> 'by')::int = 1),
+      array(select (e ->> 'form')::int from jsonb_array_elements(v_m.log) e where e ->> 'kind' = 'power' and (e ->> 'by')::int = 2),
+      (select count(*) from jsonb_array_elements(v_m.log) e where (e ->> 'by')::int = 1),
+      (select count(*) from jsonb_array_elements(v_m.log) e where (e ->> 'by')::int = 2));
   end loop;
 end $$;
-select pg_temp.assert((select status from public.pvp_matches where id = (select id from m)) = 'finished', 'match finished');
-select pg_temp.assert((select c.user_id from public.pvp_matches pm join public.characters c on c.id = pm.winner where pm.id = (select id from m)) = :'ua', 'A wins');
-select pg_temp.assert((select pvp_wins from public.characters where user_id = :'ua') = 1 and (select pvp_losses from public.characters where user_id = :'ub') = 1, 'win/loss recorded');
-select pg_temp.assert((select count(*) from public.pvp_secrets) >= 1, 'secrets stay server side');
-select pg_temp.assert((select c.hp = greatest(25, pm.p1_hp) and c.mana = pm.p1_mana from public.pvp_matches pm join public.pets c on c.character_id = pm.p1 where pm.id = (select id from m)), 'A pet keeps match HP/Mana');
-select pg_temp.assert((select c.hp = 25 from public.pvp_matches pm join public.pets c on c.character_id = pm.p2 where pm.id = (select id from m)), 'defeated B pet is floored at 25 HP');
+select pg_temp.assert((select count(*) from sim where a_wins) >= 38, 'the pet with far more stars wins (got ' || (select count(*) from sim where a_wins) || ' of 40)');
+select pg_temp.assert((select sum(a_acts) > 2 * sum(b_acts) from sim), 'a faster pet acts more often');
+select pg_temp.assert((select count(distinct f) = 3 from sim, unnest(a_forms) f), 'a stage 3 pet casts forms 1, 2 and 3');
+select pg_temp.assert((select count(*) filter (where f = 3)::numeric / count(*) between 0.35 and 0.65 from sim, unnest(a_forms) f), 'about half of the casts are the current form');
+select pg_temp.assert(not exists (select 1 from sim, unnest(b_forms) f where f <> 1), 'a stage 1 pet only casts form 1');
 
--- finished matches don't block a new search; timeout claim needs an idle opponent
+-- finished matches don't block a new search
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'ua', false);
 create temp table m2 as select public.pvp_find_match() as id;

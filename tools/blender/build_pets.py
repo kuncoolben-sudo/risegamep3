@@ -1,4 +1,4 @@
-"""Six fantasy pets x three forms (growth stages 1-3), each with an Idle loop and a Cast (power) clip.
+"""Six fantasy pets x three forms (growth stages 1-3), each with an Idle loop and a Cast (power) clip, plus Cast1/Cast2 with the powers of the earlier forms.
 
 Inside Blender (Scripting tab, or the MCP) this builds them in a 'Pets' collection, one row per species, and
 exports public/models/pet_<id>_<form>.glb. Headless (Blender binary, or `pip install bpy` and python):
@@ -30,6 +30,12 @@ for _n in [n for n in sys.modules if n == 'pets' or n.startswith('pets.')]:
 kit = importlib.import_module('pets.kit')
 
 
+def cast_keys(mod, pose, body):
+    """Clip keys of the power of form `pose` for a body of form `body` (modules with form-dependent pivots define cast_keys)."""
+    fn = getattr(mod, 'cast_keys', None)
+    return fn(pose, body) if fn else mod.CAST[pose]
+
+
 def main():
     if bpy.context.object and bpy.context.object.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -52,7 +58,9 @@ def main():
             mod.build(pet, form)
             pet.finish()
             kit.idle(pet)
-            pet.animate('Cast', mod.CAST[form])
+            pet.animate('Cast', cast_keys(mod, form, form))
+            for earlier in range(1, form):  # the powers of the earlier forms, played by this body: Cast1, Cast2
+                pet.animate(f'Cast{earlier}', cast_keys(mod, earlier, form))
             pet.root.location = (si * 11 + (form - 2) * 3.6, 0, 0)
             if EXPORT:
                 path = os.path.join(OUT, f'pet_{name}_{form}.glb')

@@ -114,6 +114,22 @@ export interface LessonResult {
   item_drop: string | null;
 }
 
+/** A fighter at the start of a duel (see _pvp_fighter in supabase/migrations/0005_auto_duel.sql). */
+export interface DuelStats {
+  stars: number; atk: number; spd: number; def: number;
+  hp0: number; mana0: number; max_hp: number; max_mana: number;
+}
+
+/** One action of an automatic duel; hp/mana are the values after it. */
+export interface DuelEvent {
+  n: number;
+  by: 1 | 2;
+  kind: 'attack' | 'power';
+  form: number | null; // which form's power was released
+  dmg: number;
+  hp1: number; hp2: number; mana1: number; mana2: number;
+}
+
 export interface MatchRow {
   id: string;
   status: 'waiting' | 'active' | 'finished';
@@ -121,22 +137,19 @@ export interface MatchRow {
   p2: string | null;
   p1_name: string;
   p2_name: string | null;
-  p1_pet: string;
+  p1_pet: string; // species icon
   p2_pet: string | null;
+  p1_species: string | null;
+  p2_species: string | null;
   p1_stage: number;
   p2_stage: number;
-  p1_hp: number;
+  p1_hp: number; // final HP/Mana once the duel is over
   p2_hp: number;
   p1_mana: number;
   p2_mana: number;
-  p1_guard: boolean;
-  p2_guard: boolean;
-  turn: string | null;
-  round: number;
-  q_prompt: string | null;
-  q_say: string | null;
-  q_choices: string[] | null;
+  p1_stats: DuelStats | null;
+  p2_stats: DuelStats | null;
   winner: string | null;
-  log: { round: number; actor: string; action: string; correct: boolean; damage: number }[];
+  log: DuelEvent[];
   updated_at: string;
 }
