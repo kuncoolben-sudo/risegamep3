@@ -155,7 +155,6 @@ export function PvpScreen({ onExit }: { onExit: () => void }) {
       <b>{s.name}</b> <small>ร่าง {s.stage}</small>
       <div className="bar hp"><div style={{ width: `${(hp(who) / (s.stats?.max_hp ?? 100)) * 100}%` }} /><span>❤️ {hp(who)}</span></div>
       <div className="bar mana"><div style={{ width: `${(mana(who) / (s.stats?.max_mana ?? 40)) * 100}%` }} /><span>💧 {mana(who)}</span></div>
-      {s.stats && <small className="muted">⭐{s.stats.stars} · ⚔️{s.stats.atk} 💨{s.stats.spd} 🛡️{s.stats.def}</small>}
     </div>
   );
 
