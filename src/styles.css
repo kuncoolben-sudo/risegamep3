@@ -139,3 +139,6 @@ input, textarea { font: inherit; padding: 10px 12px; border: 2px solid var(--lin
 .enter-btn { z-index: 6; bottom: 56px; }
 .world-panel { z-index: 7; top: 92px; max-height: calc(100% - 150px); }
 @media (max-width: 800px) { .world-panel { top: 128px; max-height: calc(100% - 190px); } }
+
+.status-card { background: var(--bg); border-radius: 14px; padding: 10px 14px; margin-top: 10px; display: grid; gap: 6px; text-align: left; }
+.stat-row { display: flex; justify-content: space-around; font-size: 1.05rem; }
