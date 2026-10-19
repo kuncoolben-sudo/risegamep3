@@ -116,17 +116,17 @@
   {
    "id": "inn1",
    "kind": "rest",
-   "name_en": "Riverside Inn",
-   "name_th": "โรงเตี๊ยมริมน้ำ",
-   "icon": "🛏️",
+   "name_en": "Riverside Hospital",
+   "name_th": "โรงพยาบาลริมน้ำ",
+   "icon": "🏥",
    "pages": null,
    "x": 810,
    "y": 430,
    "requires": [
     "u4"
    ],
-   "blurb_th": "ฟื้นฟู HP/Mana เต็มและซื้อไอเทมฟื้นฟู",
-   "rest_type": "inn"
+   "blurb_th": "รักษาสัตว์เลี้ยงให้ HP/Mana เต็ม ฟรี และซื้อไอเทมฟื้นฟู",
+   "rest_type": "hospital"
   },
   {
    "id": "u5",
@@ -259,7 +259,7 @@
    "requires": [
     "start"
    ],
-   "blurb_th": "รักษาสัตว์เลี้ยงให้ HP/Mana เต็ม (3 เหรียญ ถ้าเหรียญไม่พอรักษาฟรี) ใกล้ลานประลอง",
+   "blurb_th": "รักษาสัตว์เลี้ยงให้ HP/Mana เต็ม ฟรี และซื้อไอเทมฟื้นฟู ใกล้ลานประลอง",
    "rest_type": "hospital"
   }
  ],

@@ -78,7 +78,7 @@ select pg_temp.assert((select stage from public.pets) = 1, 'pet still stage 1 af
 
 -- rest stops
 select pg_temp.expect_err($$ select public.rest() $$, 'not_a_rest_stop');
--- the pet hospital next to the arena: open from the start, heals to full for 3 coins
+-- the pet hospital next to the arena: open from the start, heals to full for free
 reset role;
 update public.pets set hp = 10, mana = 0 where character_id = (select id from public.characters where user_id = :'ua');
 create temp table hosp as select coins as c0 from public.characters where user_id = :'ua';
@@ -88,8 +88,9 @@ select set_config('request.jwt.claim.sub', :'ua', false);
 select public.travel('hospital');
 select pg_temp.assert((select (public.rest() ->> 'hp')::int) = 100, 'hospital heals HP to full');
 select pg_temp.assert((select mana from public.pets) = 40, 'hospital restores Mana to full');
-select pg_temp.assert((select coins from public.characters) = (select c0 from hosp) - 3, 'hospital costs 3 coins');
-select pg_temp.expect_err($$ select public.buy_item('apple', 1) $$, 'not_at_inn');
+select pg_temp.assert((select coins from public.characters) = (select c0 from hosp), 'treatment is free');
+select public.buy_item('apple', 1);   -- the hospital also sells items
+select pg_temp.assert((select coins from public.characters) < (select c0 from hosp), 'bought an apple');
 select public.rest();   -- and again: no once-per-visit limit
 reset role;
 update public.characters set coins = (select c0 from hosp) where user_id = :'ua';
@@ -119,7 +120,7 @@ select pg_temp.assert((select hp from public.pets) = 100 and (select mana from p
 select pg_temp.expect_err($$ select public.use_item('apple') $$, 'already_full');
 select pg_temp.expect_err($$ select public.use_item('sandwich') $$, 'no_item');
 
--- ===== inn: climb to u4 using direct progress (as postgres) =====
+-- ===== riverside hospital: climb to u4 using direct progress (as postgres) =====
 reset role;
 insert into public.lesson_progress (character_id, lesson_id, best_correct, total, stars)
 select c.id, l.id, 1, 1, 3 from public.characters c, public.lessons l
@@ -129,10 +130,10 @@ update public.characters set coins = 40 where user_id = :'ua';
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'ua', false);
 select public.travel('inn1');
-select pg_temp.assert((select (public.rest() ->> 'hp')::int) = 100, 'inn heals to full');
-select pg_temp.assert((select coins from public.characters) = 37, 'inn costs 3');
+select pg_temp.assert((select (public.rest() ->> 'hp')::int) = 100, 'riverside hospital heals to full');
+select pg_temp.assert((select coins from public.characters) = 40, 'treatment is free');
 select public.buy_item('sandwich', 2);
-select pg_temp.assert((select coins from public.characters) = 13, 'bought 2 sandwiches');
+select pg_temp.assert((select coins from public.characters) = 16, 'bought 2 sandwiches');
 select pg_temp.expect_err($$ select public.buy_item('sandwich', 5) $$, 'not_enough_coins');
 
 -- ===== PvP: instant duels against another player's pet =====

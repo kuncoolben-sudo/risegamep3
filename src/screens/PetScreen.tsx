@@ -43,7 +43,7 @@ export function PetScreen() {
             <span>🛡️ DEF <b>{stat}</b></span>
           </div>
           <p className="muted small">ทุกสเตตัส = {STAT_BASE} + {STAT_PER_STAR} ต่อ 1 ดาวที่ได้ในบทเรียน (นับผลที่ดีที่สุดของแต่ละบท) — ทำบทเดิมให้ได้ดาวเพิ่มก็เพิ่มสเตตัสได้</p>
-          <p className="muted small">HP/Mana เป็นของสัตว์เลี้ยงเท่านั้น ใช้ในการดวล ฟื้นฟูที่แคมป์/โรงเตี๊ยม หรือใช้ไอเทมในกระเป๋า</p>
+          <p className="muted small">HP/Mana เป็นของสัตว์เลี้ยงเท่านั้น ใช้ในการดวล ฟื้นฟูที่แคมป์/โรงพยาบาล หรือใช้ไอเทมในกระเป๋า</p>
         </div>
       )}
       <div className="skill">

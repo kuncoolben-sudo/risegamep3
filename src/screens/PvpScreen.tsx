@@ -83,7 +83,7 @@ export function PvpScreen({ onExit }: { onExit: () => void }) {
             <p className="muted small">สเตตัสแต่ละตัว = {STAT_BASE} + {STAT_PER_STAR} ต่อ 1 ดาว · SPD สูง = ได้ลงมือบ่อยกว่า · ท่าละ 10 Mana ออกเองแบบสุ่ม (ร่างปัจจุบันออกบ่อยสุด) · ไม่มีระบบธาตุ ไม่เสียสัตว์เลี้ยงเมื่อแพ้</p>
           </div>
         )}
-        <p className="muted small">สัตว์เลี้ยงเริ่มดวลด้วยพลังที่เหลืออยู่ — พักที่แคมป์/โรงเตี๊ยม หรือใช้ไอเทมใน 🎒 เพื่อฟื้นฟูก่อนดวล (แพ้แล้ว HP ไม่ต่ำกว่า 25)</p>
+        <p className="muted small">สัตว์เลี้ยงเริ่มดวลด้วยพลังที่เหลืออยู่ — พักที่แคมป์/โรงพยาบาล หรือใช้ไอเทมใน 🎒 เพื่อฟื้นฟูก่อนดวล (แพ้แล้ว HP ไม่ต่ำกว่า 25)</p>
         <p>ชนะ {character?.pvp_wins} · แพ้ {character?.pvp_losses}</p>
         <button className="btn big" disabled={busy} onClick={find}>เริ่มดวล</button>
         <button className="btn ghost" onClick={onExit}>กลับแผนที่</button>
