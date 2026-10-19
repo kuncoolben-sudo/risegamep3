@@ -44,7 +44,12 @@ export interface Appearance {
   hairColor: string;
   facial: 'none' | 'moustache' | 'beard';
   outfit: string;
+  /** Concept-sheet character (kai, pond, beam, lily, minnie, maya): uses public/models/char_<preset>.glb as-is, no tinting. */
+  preset?: CharacterPreset;
 }
+
+export type CharacterPreset = 'kai' | 'pond' | 'beam' | 'lily' | 'minnie' | 'maya';
+export const CHARACTER_PRESETS: CharacterPreset[] = ['kai', 'pond', 'beam', 'lily', 'minnie', 'maya'];
 
 export interface CharacterRow {
   id: string;

@@ -27,10 +27,11 @@ function prepare(scene: THREE.Object3D) {
 
 // Chibi player model built by tools/blender/build_models.py. Look comes from characters.appearance.
 export function Character3D({ look, limbs }: { look: Appearance; limbs?: MutableRefObject<Limbs> }) {
-  const gltf = useGLTF(modelUrl('character'));
+  const gltf = useGLTF(modelUrl(look.preset ? `char_${look.preset}` : 'character'));
   const model = useMemo(() => prepare(gltf.scene), [gltf]);
 
   useEffect(() => {
+    if (look.preset) return; // presets keep their designed colours and hair
     const show = (name: string, on: boolean) => {
       const o = model.getObjectByName(name);
       if (o) o.visible = on;
