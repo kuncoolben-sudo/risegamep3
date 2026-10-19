@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGame } from '../state/GameContext';
 import { useTravel } from '../state/useTravel';
+import { useQuest } from '../state/useQuest';
 import { LocationPanel } from '../components/LocationPanel';
 import type { LocationRow } from '../lib/types';
 
@@ -8,7 +9,8 @@ const TREES = [[40, 40], [180, 60], [300, 40], [450, 90], [560, 60], [700, 60], 
   [700, 600], [560, 600], [330, 610], [200, 600], [30, 480], [40, 300], [260, 330], [420, 400], [560, 350], [690, 380], [400, 270], [880, 160]];
 
 export function MapScreen({ onPlay, onPvp }: { onPlay: (lessonId: string) => void; onPvp: () => void }) {
-  const { locations, paths, lessons, states, progress } = useGame();
+  const { locations, paths, states } = useGame();
+  const questInfo = useQuest();
   const { visit, byId, here } = useTravel();
   const [sel, setSel] = useState<string | null>(null);
   const hereLoc = byId.get(here);
@@ -19,17 +21,13 @@ export function MapScreen({ onPlay, onPvp }: { onPlay: (lessonId: string) => voi
     await visit(l);
   }
 
-  // Main Quest: first unlocked unit that still has a required lesson to clear
-  const next = [...locations].sort((a, b) => a.requires.length - b.requires.length || a.x - b.x)
-    .find((l) => states[l.id] === 'open' && l.kind === 'unit');
-  const lesson = next && lessons.find((l) => l.location_id === next.id && l.required && !progress.has(l.id));
   const quest = (
     <>
-      {next && lesson && (
+      {questInfo && (
         <div className="quest">
           <b>❗ Main Quest</b>
-          <p>{next.name_th}: {lesson.title}</p>
-          <button className="btn" onClick={() => go(next)}>ไปเลย ➜</button>
+          <p>{questInfo.location.name_th}: {questInfo.lesson.title}</p>
+          <button className="btn" onClick={() => go(questInfo.location)}>ไปเลย ➜</button>
         </div>
       )}
       <p className="muted">แตะสถานที่บนแผนที่เพื่อเดินทาง</p>

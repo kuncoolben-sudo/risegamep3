@@ -1,14 +1,15 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Clone, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGame } from '../state/GameContext';
 import { useTravel } from '../state/useTravel';
+import { useQuest } from '../state/useQuest';
 import { LocationPanel } from '../components/LocationPanel';
 import type { LocationRow, LocationStatus } from '../lib/types';
 import { modelUrl } from './assets';
 import { Character3D, Pet3D, type Limbs } from './Character3D';
-import { COLLIDE_RADIUS, LOCATION_MODEL, NEAR_RADIUS, WORLD_RADIUS, rng, toWorld } from './config';
+import { COLLIDE_RADIUS, LOCATION_MODEL, NEAR_RADIUS, SCENERY_COUNT, WORLD_RADIUS, rng, toWorld } from './config';
 
 interface Input { x: number; z: number }
 
@@ -52,12 +53,46 @@ function Road({ a, b, open }: { a: LocationRow; b: LocationRow; open: boolean })
   );
 }
 
+type SceneryKind = 'tree' | 'pine' | 'rock' | 'flower';
+interface Scatter { x: number; z: number; s: number; ry: number }
+
+// One InstancedMesh per mesh of the model: hundreds of props cost a handful of draw calls.
+function Instanced({ scene, items }: { scene: THREE.Object3D; items: Scatter[] }) {
+  const parts = useMemo(() => {
+    scene.updateWorldMatrix(true, true);
+    const out: { geo: THREE.BufferGeometry; mat: THREE.Material; local: THREE.Matrix4 }[] = [];
+    scene.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh) out.push({ geo: m.geometry, mat: m.material as THREE.Material, local: m.matrixWorld.clone() });
+    });
+    return out;
+  }, [scene]);
+  const refs = useRef<(THREE.InstancedMesh | null)[]>([]);
+  useLayoutEffect(() => {
+    const P = new THREE.Matrix4(), M = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), pos = new THREE.Vector3(), sc = new THREE.Vector3();
+    parts.forEach((part, pi) => {
+      const im = refs.current[pi];
+      if (!im) return;
+      items.forEach((it, i) => {
+        q.setFromEuler(e.set(0, it.ry, 0));
+        P.compose(pos.set(it.x, 0, it.z), q, sc.setScalar(it.s));
+        im.setMatrixAt(i, M.multiplyMatrices(P, part.local));
+      });
+      im.instanceMatrix.needsUpdate = true;
+    });
+  }, [parts, items]);
+  if (items.length === 0) return null;
+  return <>{parts.map((p, i) => <instancedMesh key={i} ref={(el) => { refs.current[i] = el; }} args={[p.geo, p.mat, items.length]} castShadow frustumCulled={false} />)}</>;
+}
+
 function Scenery({ locations, paths }: { locations: LocationRow[]; paths: [string, string][] }) {
-  const tree = useGLTF(modelUrl('p_tree')).scene;
-  const pine = useGLTF(modelUrl('p_pine')).scene;
-  const rock = useGLTF(modelUrl('p_rock')).scene;
-  const flower = useGLTF(modelUrl('p_flower')).scene;
-  const items = useMemo(() => {
+  const scenes: Record<SceneryKind, THREE.Object3D> = {
+    tree: useGLTF(modelUrl('p_tree')).scene,
+    pine: useGLTF(modelUrl('p_pine')).scene,
+    rock: useGLTF(modelUrl('p_rock')).scene,
+    flower: useGLTF(modelUrl('p_flower')).scene,
+  };
+  const groups = useMemo(() => {
     const r = rng(7);
     const pts = locations.map((l) => toWorld(l.x, l.y));
     const byId = new Map(locations.map((l) => [l.id, l]));
@@ -67,25 +102,94 @@ function Scenery({ locations, paths }: { locations: LocationRow[]; paths: [strin
       const t = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / (dx * dx + dz * dz)));
       return Math.hypot(px - (ax + t * dx), pz - (az + t * dz));
     };
-    const out: { kind: 'tree' | 'pine' | 'rock' | 'flower'; x: number; z: number; s: number; ry: number }[] = [];
-    let tries = 0;
-    while (out.length < 90 && tries++ < 2000) {
+    const out: Record<SceneryKind, Scatter[]> = { tree: [], pine: [], rock: [], flower: [] };
+    let n = 0, tries = 0;
+    while (n < SCENERY_COUNT && tries++ < 6000) {
       const ang = r() * Math.PI * 2, rad = Math.sqrt(r()) * (WORLD_RADIUS - 1);
       const x = Math.cos(ang) * rad, z = Math.sin(ang) * rad;
       if (pts.some(([px, pz]) => Math.hypot(px - x, pz - z) < 5.2)) continue;
       if (segs.some((s) => segDist(x, z, s) < 2.0)) continue;
       const k = r();
-      out.push({ kind: k < 0.4 ? 'tree' : k < 0.65 ? 'pine' : k < 0.8 ? 'rock' : 'flower', x, z, s: 0.8 + r() * 0.6, ry: r() * 6.28 });
+      const kind: SceneryKind = k < 0.4 ? 'tree' : k < 0.65 ? 'pine' : k < 0.8 ? 'rock' : 'flower';
+      const s = 0.8 + r() * 0.6;
+      out[kind].push({ x, z, s: kind === 'flower' ? s * 1.4 : s, ry: r() * 6.28 });
+      n++;
     }
     return out;
   }, [locations, paths]);
-  const src = { tree, pine, rock, flower };
-  return <>{items.map((it, i) => <group key={i} position={[it.x, 0, it.z]} rotation={[0, it.ry, 0]} scale={it.kind === 'flower' ? it.s * 1.4 : it.s}><Clone object={src[it.kind]} castShadow /></group>)}</>;
+  return <>{(Object.keys(groups) as SceneryKind[]).map((k) => <Instanced key={k} scene={scenes[k]} items={groups[k]} />)}</>;
 }
 
-function Player({ start, input, locations, onNear }: {
+// The sun follows the player so shadows stay sharp wherever you walk in the larger world.
+function SunLight({ target, shadows }: { target: MutableRefObject<THREE.Vector3>; shadows: boolean }) {
+  const light = useRef<THREE.DirectionalLight>(null);
+  const aim = useMemo(() => new THREE.Object3D(), []);
+  useFrame(() => {
+    const l = light.current;
+    if (!l) return;
+    const t = target.current;
+    l.position.set(t.x + 14, 24, t.z + 10);
+    aim.position.set(t.x, 0, t.z);
+    aim.updateMatrixWorld();
+  });
+  return (
+    <>
+      <primitive object={aim} />
+      <directionalLight ref={light} target={aim} intensity={2.0} castShadow={shadows} shadow-mapSize={[1024, 1024]}
+        shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} shadow-camera-near={1} shadow-camera-far={70} />
+    </>
+  );
+}
+
+// Minimap + compass arrow to the Main Quest. Updated straight on the DOM each frame (no React re-render).
+function Minimap({ locations, states, pos, quest }: {
+  locations: LocationRow[]; states: Record<string, LocationStatus>; pos: MutableRefObject<THREE.Vector3>; quest: LocationRow | null;
+}) {
+  const SIZE = 128;
+  const k = (SIZE / 2 - 4) / WORLD_RADIUS;
+  const dot = useRef<HTMLDivElement>(null);
+  const arrow = useRef<HTMLDivElement>(null);
+  const dist = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const p = pos.current;
+      if (dot.current) dot.current.style.transform = `translate(${p.x * k}px, ${p.z * k}px)`;
+      if (quest && arrow.current) {
+        const [qx, qz] = toWorld(quest.x, quest.y);
+        const dx = qx - p.x, dz = qz - p.z, d = Math.hypot(dx, dz);
+        arrow.current.style.display = d < 7 ? 'none' : 'flex';
+        arrow.current.style.setProperty('--rot', `${Math.atan2(dx, -dz)}rad`); // camera looks toward -Z
+        if (dist.current) dist.current.textContent = `${Math.round(d)} ม.`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [pos, quest, k]);
+  return (
+    <div className="minimap-wrap">
+      <div className="minimap" style={{ width: SIZE, height: SIZE }}>
+        {locations.map((l) => {
+          const [x, z] = toWorld(l.x, l.y);
+          return <i key={l.id} className={`mm-dot ${states[l.id] ?? 'locked'} ${quest?.id === l.id ? 'quest' : ''}`} style={{ left: SIZE / 2 + x * k, top: SIZE / 2 + z * k }} title={l.name_en} />;
+        })}
+        <div className="mm-me" ref={dot} />
+      </div>
+      {quest && (
+        <div className="quest-arrow" ref={arrow}>
+          <b className="arrow-icon">▲</b>
+          <span><small>{quest.name_en}</small><br /><span ref={dist} /></span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Player({ start, input, pos, locations, onNear }: {
   start: [number, number];
   input: React.MutableRefObject<Input>;
+  pos: MutableRefObject<THREE.Vector3>;
   locations: LocationRow[];
   onNear: (id: string | null) => void;
 }) {
@@ -143,6 +247,7 @@ function Player({ start, input, locations, onNear }: {
       if (d < best) { best = d; near = s.id; }
     }
     if (near !== lastNear.current) { lastNear.current = near; onNear(near); }
+    pos.current.copy(g.position);
     g.rotation.y = yaw.current;
     // walk cycle
     const t = state.clock.elapsedTime * 11;
@@ -226,6 +331,8 @@ export function World3D({ onPlay, onPvp, hud }: { onPlay: (lessonId: string) => 
   const { locations, paths, states, character } = useGame();
   const { visit, byId, here } = useTravel();
   const input = useRef<Input>({ x: 0, z: 0 });
+  const playerPos = useRef(new THREE.Vector3());
+  const quest = useQuest();
   const [near, setNear] = useState<string | null>(null);
   const [sel, setSel] = useState<string | null>(null);
   const [lowPower, setLowPower] = useState(() => { try { return localStorage.getItem('lowPower') === '1'; } catch { return false; } });
@@ -259,16 +366,15 @@ export function World3D({ onPlay, onPvp, hud }: { onPlay: (lessonId: string) => 
 
   return (
     <div className="world">
-      <Canvas shadows={!lowPower} dpr={lowPower ? 1 : [1, 1.75]} camera={{ fov: 42, near: 0.1, far: 200 }} gl={{ antialias: !lowPower }}>
+      <Canvas shadows={!lowPower} dpr={lowPower ? 1 : [1, 1.75]} camera={{ fov: 42, near: 0.1, far: 150 }} gl={{ antialias: !lowPower }}>
         <color attach="background" args={['#9fd8ff']} />
-        <fog attach="fog" args={['#bfe6ff', 38, 90]} />
+        <fog attach="fog" args={['#bfe6ff', 50, 115]} />
         <ambientLight intensity={1.15} />
         <hemisphereLight args={['#dff3ff', '#8bc26a', 0.6]} />
-        <directionalLight position={[14, 24, 10]} intensity={2.0} castShadow={!lowPower} shadow-mapSize={[1024, 1024]}
-          shadow-camera-left={-34} shadow-camera-right={34} shadow-camera-top={34} shadow-camera-bottom={-34} shadow-camera-far={80} />
+        <SunLight target={playerPos} shadows={!lowPower} />
         <Suspense fallback={null}>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.25, 0]}>
-            <circleGeometry args={[120, 48]} />
+            <circleGeometry args={[170, 48]} />
             <meshStandardMaterial color="#58b7ff" />
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -281,12 +387,13 @@ export function World3D({ onPlay, onPvp, hud }: { onPlay: (lessonId: string) => 
           })}
           {locations.map((l) => <Building key={l.id} loc={l} status={states[l.id] ?? 'locked'} active={near === l.id} />)}
           <Scenery locations={locations} paths={paths} />
-          {character && <Player start={start} input={input} locations={locations} onNear={onNear} />}
+          {character && <Player start={start} input={input} pos={playerPos} locations={locations} onNear={onNear} />}
         </Suspense>
       </Canvas>
 
       <JoystickLayer input={input} />
       {hud}
+      <Minimap locations={locations} states={states} pos={playerPos} quest={quest?.location ?? null} />
       <div className="world-hint">{coarse ? 'แตะค้างตรงไหนก็ได้บนจอแล้วลากเพื่อเดิน' : 'ลากเมาส์ค้าง หรือ WASD / ลูกศร · E เพื่อเข้า'}</div>
       <button className="btn ghost world-low" onClick={toggleLow}>{lowPower ? '⚡ โหมดประหยัด: เปิด' : '⚡ โหมดประหยัด'}</button>
       {nearLoc && !sel && (
