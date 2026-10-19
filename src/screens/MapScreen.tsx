@@ -50,7 +50,24 @@ export function MapScreen({ onPlay, onPvp }: { onPlay: (lessonId: string) => voi
   }
 
   const panel = () => {
-    if (!selected) return <p className="muted">แตะสถานที่บนแผนที่เพื่อเดินทาง</p>;
+    if (!selected) {
+      // Main Quest: first unlocked location that still has a required lesson to clear
+      const next = [...locations].sort((a, b) => a.requires.length - b.requires.length || a.x - b.x)
+        .find((l) => states[l.id] === 'open' && l.kind === 'unit');
+      const lesson = next && lessons.find((l) => l.location_id === next.id && l.required && !progress.has(l.id));
+      return (
+        <>
+          {next && lesson && (
+            <div className="quest">
+              <b>❗ Main Quest</b>
+              <p>{next.name_th}: {lesson.title}</p>
+              <button className="btn" onClick={() => visit(next)}>ไปเลย ➜</button>
+            </div>
+          )}
+          <p className="muted">แตะสถานที่บนแผนที่เพื่อเดินทาง</p>
+        </>
+      );
+    }
     const st = states[selected.id];
     const here_ = here === selected.id;
     const header = (
