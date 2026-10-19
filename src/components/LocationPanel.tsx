@@ -65,6 +65,7 @@ export function LocationPanel({ selected, onClose, onPlay, onPvp, onGo, empty }:
     return <>{header}<p>{selected.blurb_th}</p><button className="btn big" onClick={onPvp}>⚔️ เข้าสู่ลานประลอง</button></>;
   if (selected.kind === 'rest') {
     const inn = selected.rest_type === 'inn';
+    const full = inn || selected.rest_type === 'hospital'; // heals to full for 3 coins (free when broke)
     return (
       <>
         {header}
@@ -75,8 +76,8 @@ export function LocationPanel({ selected, onClose, onPlay, onPvp, onGo, empty }:
             <Bar value={pet.mana} max={pet.max_mana} kind="mana" />
           </div>
         )}
-        <button className="btn big" disabled={busy || (!inn && character?.rested_here)} onClick={() => act('rest', undefined, inn ? 'พักผ่อนจนเต็ม! 💤' : 'พักที่แคมป์แล้ว ✨')}>
-          {inn ? ((character?.coins ?? 0) >= 3 ? '🛏️ พักจนเต็ม (3 🪙)' : '🛏️ พักจนเต็ม (ฟรี)') : character?.rested_here ? '⛺ พักแล้ว' : '⛺ พักที่แคมป์ (+40 HP, +15 Mana)'}
+        <button className="btn big" disabled={busy || (!full && character?.rested_here)} onClick={() => act('rest', undefined, inn ? 'พักผ่อนจนเต็ม! 💤' : full ? 'รักษาเรียบร้อย! 💖' : 'พักที่แคมป์แล้ว ✨')}>
+          {full ? ((character?.coins ?? 0) >= 3 ? `${inn ? '🛏️ พักจนเต็ม' : '🏥 รักษาจนเต็ม'} (3 🪙)` : `${inn ? '🛏️ พักจนเต็ม' : '🏥 รักษาจนเต็ม'} (ฟรี)`) : character?.rested_here ? '⛺ พักแล้ว' : '⛺ พักที่แคมป์ (+40 HP, +15 Mana)'}
         </button>
         {inn && (
           <ul className="list">

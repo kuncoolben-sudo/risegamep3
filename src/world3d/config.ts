@@ -17,6 +17,7 @@ export const LOCATION_MODEL: Record<string, { file: string; scale?: number }> = 
   campA: { file: 'b_tent' },
   campB: { file: 'b_tent' },
   inn1: { file: 'b_inn' },
+  hospital: { file: 'b_hospital' },
   arena: { file: 'b_arena' },
   festival: { file: 'b_festival' },
   sounds: { file: 'b_sound' },

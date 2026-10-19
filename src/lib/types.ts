@@ -13,7 +13,7 @@ export interface LocationRow {
   x: number;
   y: number;
   requires: string[];
-  rest_type: 'inn' | 'camp' | null;
+  rest_type: 'inn' | 'camp' | 'hospital' | null;
   content_status: 'verified' | 'pending';
 }
 
