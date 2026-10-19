@@ -11,7 +11,7 @@ const DuelArena3D = lazy(() => import('../world3d/DuelArena3D'));
 const ATTACK_MS = 1300;
 const POWER_MS = 3000;
 
-// Replay of an automatic duel. The server has already played it (see supabase/migrations/0005_auto_duel.sql);
+// Replay of an automatic duel. The server has already played it (see supabase/migrations/0005 and 0006);
 // this walks through the log: one action at a time, the 3D pets cast their powers and the bars follow.
 export function PvpScreen({ onExit }: { onExit: () => void }) {
   const { character, pet, progress, say, refresh } = useGame();
@@ -21,30 +21,10 @@ export function PvpScreen({ onExit }: { onExit: () => void }) {
   const [replayId, setReplayId] = useState<string | null>(null);
   const me = character?.id;
 
-  const load = useCallback(async (id?: string) => {
-    let q = supabase.from('pvp_matches').select('*');
-    q = id ? q.eq('id', id) : q.eq('status', 'waiting').order('created_at', { ascending: false }).limit(1);
-    const { data } = await q;
+  const load = useCallback(async (id: string) => {
+    const { data } = await supabase.from('pvp_matches').select('*').eq('id', id);
     setMatch((data?.[0] as MatchRow | undefined) ?? null);
   }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  // the first fighter waits: realtime (with a poll as a fallback) tells us when somebody joined and the duel is over
-  const matchId = match?.id;
-  const waiting = match?.status === 'waiting';
-  useEffect(() => {
-    if (!matchId || !waiting) return;
-    const ch = supabase
-      .channel(`match-${matchId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pvp_matches', filter: `id=eq.${matchId}` }, (p) => {
-        if (p.eventType === 'DELETE') setMatch(null);
-        else setMatch(p.new as MatchRow);
-      })
-      .subscribe();
-    const t = window.setInterval(() => { load(matchId); }, 3000);
-    return () => { supabase.removeChannel(ch); window.clearInterval(t); };
-  }, [matchId, waiting, load]);
 
   // a finished match starts its replay once
   useEffect(() => {
@@ -73,11 +53,6 @@ export function PvpScreen({ onExit }: { onExit: () => void }) {
     const id = await call<string>('pvp_find_match', {});
     if (id) await load(id);
   }
-  async function cancel() {
-    if (match?.status === 'waiting') await call('pvp_cancel', { p_match: match.id });
-    await refresh();
-    setMatch(null);
-  }
   async function back() {
     await refresh();
     setMatch(null);
@@ -88,11 +63,11 @@ export function PvpScreen({ onExit }: { onExit: () => void }) {
   const myStars = totalStars(progress);
   const myStat = statValue(myStars);
 
-  if (!match || match.status === 'active') {
+  if (!match) {
     return (
       <section className="card center">
         <h2>⚔️ ลานประลอง 1v1</h2>
-        <p>การดวลเป็นแบบอัตโนมัติ — สัตว์เลี้ยงสู้กันเอง ไม่ต้องกดอะไร สเตตัสมาจากดาวที่สะสมในบทเรียน</p>
+        <p>จับคู่ทันที ไม่ต้องรอ — สู้กับสัตว์เลี้ยงของผู้เล่นคนอื่น (ไม่ต้องออนไลน์) และสัตว์เลี้ยงสู้กันเอง ไม่ต้องกดอะไร สเตตัสมาจากดาวที่สะสมในบทเรียน</p>
         {pet && (
           <div className="status-card">
             <div className="mini-bars">
@@ -110,21 +85,11 @@ export function PvpScreen({ onExit }: { onExit: () => void }) {
         )}
         <p className="muted small">สัตว์เลี้ยงเริ่มดวลด้วยพลังที่เหลืออยู่ — พักที่แคมป์/โรงเตี๊ยม หรือใช้ไอเทมใน 🎒 เพื่อฟื้นฟูก่อนดวล (แพ้แล้ว HP ไม่ต่ำกว่า 25)</p>
         <p>ชนะ {character?.pvp_wins} · แพ้ {character?.pvp_losses}</p>
-        <button className="btn big" disabled={busy} onClick={find}>หาคู่ต่อสู้</button>
+        <button className="btn big" disabled={busy} onClick={find}>เริ่มดวล</button>
         <button className="btn ghost" onClick={onExit}>กลับแผนที่</button>
       </section>
     );
   }
-  if (match.status === 'waiting') {
-    return (
-      <section className="card center">
-        <h2>🔎 กำลังหาคู่ต่อสู้…</h2>
-        <p className="muted">เมื่อมีผู้เล่นอีกคนกด "หาคู่ต่อสู้" การดวลจะเริ่มและเล่นให้ดูทันที (เปิดเกมอีกเครื่องหนึ่งเพื่อทดสอบได้)</p>
-        <button className="btn ghost" onClick={cancel}>ยกเลิก</button>
-      </section>
-    );
-  }
-
   // ---- replay of a finished duel
   const isP1 = match.p1 === me;
   const mine = isP1 ? 1 : 2, foe = isP1 ? 2 : 1;
