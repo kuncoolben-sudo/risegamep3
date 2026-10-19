@@ -1,7 +1,7 @@
 import { Avatar } from './Avatar';
 import { useGame } from '../state/GameContext';
 
-export type View = 'map' | 'pet' | 'bag' | 'pvp' | 'lesson';
+export type View = 'world' | 'map' | 'pet' | 'bag' | 'pvp' | 'lesson';
 
 export function Bar({ value, max, kind }: { value: number; max: number; kind: 'hp' | 'mana' }) {
   return (
@@ -30,7 +30,7 @@ export function Hud({ view, go, hp, mana }: { view: View; go: (v: View) => void;
         <Bar value={mana ?? character.mana} max={character.max_mana} kind="mana" />
       </div>
       <nav>
-        {([['map', '🗺️', 'แผนที่'], ['pet', '🐾', 'สัตว์เลี้ยง'], ['bag', '🎒', 'กระเป๋า']] as const).map(([v, e, t]) => (
+        {([['world', '🌍', 'โลก 3D'], ['map', '🗺️', 'แผนที่ 2D'], ['pet', '🐾', 'สัตว์เลี้ยง'], ['bag', '🎒', 'กระเป๋า']] as const).map(([v, e, t]) => (
           <button key={v} className={`nav ${view === v ? 'on' : ''}`} onClick={() => go(v)} disabled={view === 'lesson'}>
             {e}<span>{t}</span>
           </button>

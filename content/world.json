@@ -1,35 +1,379 @@
 {
-  "_note": "Names of map places are game design (not from the book). Page ranges come from the Contents page of RISE English Grade 1. Add Units 7-8 here when their contents page is available.",
-  "locations": [
-    { "id": "start",    "kind": "unit",    "name_en": "Welcome Village",   "name_th": "หมู่บ้านต้อนรับ",         "icon": "🏡", "pages": [6, 7],     "x": 90,  "y": 560, "requires": [], "blurb_th": "จุดเริ่มต้น เรียนรู้วิธีเล่นและทบทวน Starter: Welcome back" },
-    { "id": "u1",       "kind": "unit",    "name_en": "School Days",       "name_th": "โรงเรียน (Unit 1)",      "icon": "🏫", "pages": [8, 21],    "x": 250, "y": 490, "requires": ["start"], "blurb_th": "Unit 1 School days: วิชาเรียน สถานที่ในโรงเรียน" },
-    { "id": "u2",       "kind": "unit",    "name_en": "Our Look",          "name_th": "สตูดิโอรูปลักษณ์ (Unit 2)", "icon": "🪞", "pages": [22, 35],   "x": 410, "y": 545, "requires": ["u1"], "blurb_th": "Unit 2 Our look: ตัวเลข รูปร่างหน้าตา ส่วนของร่างกาย" },
-    { "id": "campA",    "kind": "rest",    "name_en": "Meadow Camp",       "name_th": "แคมป์ทุ่งหญ้า",           "icon": "⛺", "pages": null,       "x": 520, "y": 465, "requires": ["u2"], "rest_type": "camp", "blurb_th": "ฟื้นฟู HP และ Mana บางส่วน (ครั้งเดียวต่อการมาถึง)" },
-    { "id": "u3",       "kind": "unit",    "name_en": "In the Kitchen",    "name_th": "หมู่บ้านครัว (Unit 3)",   "icon": "🍳", "pages": [36, 49],   "x": 640, "y": 530, "requires": ["u2"], "blurb_th": "Unit 3 In the kitchen: อาหาร ภาชนะ และการซื้ออาหาร" },
-    { "id": "u4",       "kind": "unit",    "name_en": "Wild Animals",      "name_th": "ป่าสัตว์ป่า (Unit 4)",    "icon": "🦁", "pages": [50, 63],   "x": 790, "y": 450, "requires": ["u3"], "blurb_th": "Unit 4 Wild animals: สัตว์ ที่อยู่อาศัย การเปรียบเทียบ" },
-    { "id": "inn1",     "kind": "rest",    "name_en": "Riverside Inn",     "name_th": "โรงเตี๊ยมริมน้ำ",         "icon": "🛏️", "pages": null,       "x": 880, "y": 345, "requires": ["u4"], "rest_type": "inn", "blurb_th": "ฟื้นฟู HP/Mana เต็มและซื้อไอเทมฟื้นฟู" },
-    { "id": "u5",       "kind": "unit",    "name_en": "In My Town",        "name_th": "เมืองของฉัน (Unit 5)",    "icon": "🏙️", "pages": [64, 77],   "x": 780, "y": 250, "requires": ["u4"], "blurb_th": "Unit 5 In my town: สถานที่ในเมือง ที่อยู่ แผนที่" },
-    { "id": "u6",       "kind": "unit",    "name_en": "Sports Day",        "name_th": "สนามกีฬา (Unit 6)",       "icon": "🏟️", "pages": [78, 91],   "x": 620, "y": 195, "requires": ["u5"], "blurb_th": "Unit 6 Sports day: กีฬา อุปกรณ์ กิจกรรม กราฟแท่ง" },
-    { "id": "campB",    "kind": "rest",    "name_en": "Hilltop Camp",      "name_th": "แคมป์บนเนิน",             "icon": "🏕️", "pages": null,       "x": 480, "y": 265, "requires": ["u6"], "rest_type": "camp", "blurb_th": "ฟื้นฟู HP และ Mana บางส่วน (ครั้งเดียวต่อการมาถึง)" },
-    { "id": "festival", "kind": "pending", "name_en": "Festival Square",   "name_th": "จัตุรัสเทศกาล",           "icon": "🎪", "pages": [92, 95],   "x": 350, "y": 160, "requires": ["u6"], "blurb_th": "Festivals หน้า 92–95", "content_status": "pending" },
-    { "id": "sounds",   "kind": "pending", "name_en": "Sound Library",     "name_th": "หอสมุดเสียงภาษาอังกฤษ",   "icon": "🔊", "pages": [96, 100],  "x": 215, "y": 235, "requires": ["u6"], "blurb_th": "English sounds หน้า 96–100", "content_status": "pending" },
-    { "id": "tower",    "kind": "pending", "name_en": "Review Tower",      "name_th": "หอคอยทบทวน",             "icon": "🗼", "pages": [101, 112], "x": 100, "y": 120, "requires": ["u6"], "blurb_th": "Extra activities หน้า 101–103 และ Language focus หน้า 104–112", "content_status": "pending" },
-    { "id": "arena",    "kind": "arena",   "name_en": "Duel Arena",        "name_th": "ลานประลอง",              "icon": "⚔️", "pages": null,       "x": 110, "y": 400, "requires": ["start"], "blurb_th": "ดวล 1v1 แบบผลัดกันเล่น ตอบคำถามภาษาอังกฤษเพื่อเพิ่มพลัง" }
+ "_note": "Names of map places are game design (not from the book). Page ranges come from the Contents page of the Grade 3 book.",
+ "locations": [
+  {
+   "id": "start",
+   "kind": "unit",
+   "name_en": "Hello Village",
+   "name_th": "หมู่บ้านทักทาย",
+   "icon": "🏡",
+   "pages": [
+    6,
+    7
+   ],
+   "x": 80,
+   "y": 580,
+   "requires": [],
+   "blurb_th": "Starter Hello friends!: ทักทาย สี วัน"
+  },
+  {
+   "id": "arena",
+   "kind": "arena",
+   "name_en": "Duel Arena",
+   "name_th": "ลานประลอง",
+   "icon": "⚔️",
+   "pages": null,
+   "x": 80,
+   "y": 440,
+   "requires": [
+    "start"
+   ],
+   "blurb_th": "ดวล 1v1 แบบผลัดกันเล่น ตอบคำถามภาษาอังกฤษเพื่อเพิ่มพลัง"
+  },
+  {
+   "id": "u1",
+   "kind": "unit",
+   "name_en": "Back to School",
+   "name_th": "กลับสู่โรงเรียน (Unit 1)",
+   "icon": "🏫",
+   "pages": [
+    8,
+    21
+   ],
+   "x": 220,
+   "y": 520,
+   "requires": [
+    "start"
+   ],
+   "blurb_th": "Unit 1 Back to school again: ประเทศ เวลา กิจวัตร"
+  },
+  {
+   "id": "u2",
+   "kind": "unit",
+   "name_en": "All Year Round",
+   "name_th": "ตลอดปี (Unit 2)",
+   "icon": "🌦️",
+   "pages": [
+    22,
+    35
+   ],
+   "x": 360,
+   "y": 580,
+   "requires": [
+    "u1"
+   ],
+   "blurb_th": "Unit 2 All year round: อากาศ เดือน ฤดู"
+  },
+  {
+   "id": "campA",
+   "kind": "rest",
+   "name_en": "Meadow Camp",
+   "name_th": "แคมป์ทุ่งหญ้า",
+   "icon": "⛺",
+   "pages": null,
+   "x": 450,
+   "y": 500,
+   "requires": [
+    "u2"
+   ],
+   "blurb_th": "ฟื้นฟู HP และ Mana บางส่วน (ครั้งเดียวต่อการมาถึง)",
+   "rest_type": "camp"
+  },
+  {
+   "id": "u3",
+   "kind": "unit",
+   "name_en": "Family & Friends",
+   "name_th": "ครอบครัวและเพื่อน (Unit 3)",
+   "icon": "👨‍👩‍👧",
+   "pages": [
+    36,
+    49
+   ],
+   "x": 560,
+   "y": 560,
+   "requires": [
+    "u2"
+   ],
+   "blurb_th": "Unit 3 Family and friends: ลักษณะ อายุ น้ำหนัก"
+  },
+  {
+   "id": "u4",
+   "kind": "unit",
+   "name_en": "Around Town",
+   "name_th": "รอบเมือง (Unit 4)",
+   "icon": "🏙️",
+   "pages": [
+    50,
+    63
+   ],
+   "x": 710,
+   "y": 520,
+   "requires": [
+    "u3"
+   ],
+   "blurb_th": "Unit 4 Around town: สถานที่ การเดินทาง คำบอกตำแหน่ง"
+  },
+  {
+   "id": "inn1",
+   "kind": "rest",
+   "name_en": "Riverside Inn",
+   "name_th": "โรงเตี๊ยมริมน้ำ",
+   "icon": "🛏️",
+   "pages": null,
+   "x": 810,
+   "y": 430,
+   "requires": [
+    "u4"
+   ],
+   "blurb_th": "ฟื้นฟู HP/Mana เต็มและซื้อไอเทมฟื้นฟู",
+   "rest_type": "inn"
+  },
+  {
+   "id": "u5",
+   "kind": "unit",
+   "name_en": "Birthday Food",
+   "name_th": "อาหารวันเกิด (Unit 5)",
+   "icon": "🎂",
+   "pages": [
+    64,
+    77
+   ],
+   "x": 890,
+   "y": 320,
+   "requires": [
+    "u4"
+   ],
+   "blurb_th": "Unit 5 Birthday food: อาหาร ลำดับที่ คำเชิญ"
+  },
+  {
+   "id": "u6",
+   "kind": "unit",
+   "name_en": "My Day",
+   "name_th": "วันของฉัน (Unit 6)",
+   "icon": "⏰",
+   "pages": [
+    78,
+    91
+   ],
+   "x": 740,
+   "y": 230,
+   "requires": [
+    "u5"
+   ],
+   "blurb_th": "Unit 6 My day: กิจวัตร เวลา งานบ้าน ความถี่"
+  },
+  {
+   "id": "campB",
+   "kind": "rest",
+   "name_en": "Hilltop Camp",
+   "name_th": "แคมป์บนเนิน",
+   "icon": "🏕️",
+   "pages": null,
+   "x": 630,
+   "y": 320,
+   "requires": [
+    "u6"
+   ],
+   "blurb_th": "ฟื้นฟู HP และ Mana บางส่วน (ครั้งเดียวต่อการมาถึง)",
+   "rest_type": "camp"
+  },
+  {
+   "id": "u7",
+   "kind": "unit",
+   "name_en": "At the Beach",
+   "name_th": "ที่ชายหาด (Unit 7)",
+   "icon": "🏖️",
+   "pages": [
+    92,
+    105
+   ],
+   "x": 560,
+   "y": 200,
+   "requires": [
+    "u6"
+   ],
+   "blurb_th": "Unit 7 At the beach: กิจกรรม งานอดิเรก พระอาทิตย์"
+  },
+  {
+   "id": "u8",
+   "kind": "unit",
+   "name_en": "Favourite Stories",
+   "name_th": "นิทานเรื่องโปรด (Unit 8)",
+   "icon": "📚",
+   "pages": [
+    106,
+    119
+   ],
+   "x": 400,
+   "y": 240,
+   "requires": [
+    "u7"
+   ],
+   "blurb_th": "Unit 8 My favourite stories: สัตว์ นิทาน สิ่งมีชีวิต"
+  },
+  {
+   "id": "festival",
+   "kind": "pending",
+   "name_en": "Festival Square",
+   "name_th": "จัตุรัสเทศกาล",
+   "icon": "🎪",
+   "pages": [
+    120,
+    123
+   ],
+   "x": 270,
+   "y": 150,
+   "requires": [
+    "u8"
+   ],
+   "blurb_th": "Festivals หน้า 120–123",
+   "content_status": "pending"
+  },
+  {
+   "id": "sounds",
+   "kind": "pending",
+   "name_en": "Sound Library",
+   "name_th": "หอสมุดเสียงภาษาอังกฤษ",
+   "icon": "🔊",
+   "pages": [
+    124,
+    128
+   ],
+   "x": 140,
+   "y": 230,
+   "requires": [
+    "u8"
+   ],
+   "blurb_th": "English sounds หน้า 124–128",
+   "content_status": "pending"
+  }
+ ],
+ "paths": [
+  [
+   "start",
+   "u1"
   ],
-  "paths": [
-    ["start", "u1"], ["u1", "u2"], ["u2", "campA"], ["campA", "u3"], ["u3", "u4"], ["u4", "inn1"],
-    ["inn1", "u5"], ["u5", "u6"], ["u6", "campB"], ["campB", "festival"], ["festival", "sounds"],
-    ["sounds", "tower"], ["start", "arena"], ["arena", "u1"]
+  [
+   "u1",
+   "u2"
   ],
-  "items": [
-    { "id": "apple",     "name_en": "Apple",       "name_th": "แอปเปิลฟื้นพลัง",  "icon": "🍎", "kind": "heal",  "heal_hp": 30, "heal_mana": 0,  "price": 6 },
-    { "id": "sandwich",  "name_en": "Sandwich",    "name_th": "แซนด์วิชอิ่มท้อง", "icon": "🥪", "kind": "heal",  "heal_hp": 60, "heal_mana": 0,  "price": 12 },
-    { "id": "tea",       "name_en": "Cup of tea",  "name_th": "ชาอุ่นฟื้น Mana",  "icon": "🍵", "kind": "mana",  "heal_hp": 0,  "heal_mana": 20, "price": 8 }
+  [
+   "u2",
+   "campA"
   ],
-  "pet_species": [
-    { "id": "tiger",    "name_en": "Tiger",    "name_th": "เสือ",    "icon": "🐯", "skill_name": "Mighty Roar",   "blurb_th": "สัตว์จาก Unit 4 ใจกล้า" },
-    { "id": "elephant", "name_en": "Elephant", "name_th": "ช้าง",    "icon": "🐘", "skill_name": "Big Stomp",     "blurb_th": "สัตว์จาก Unit 4 ตัวใหญ่ใจดี" },
-    { "id": "dolphin",  "name_en": "Dolphin",  "name_th": "โลมา",    "icon": "🐬", "skill_name": "Splash Dash",   "blurb_th": "สัตว์จาก Unit 4 ว่ายน้ำเก่ง" },
-    { "id": "eagle",    "name_en": "Eagle",    "name_th": "นกอินทรี", "icon": "🦅", "skill_name": "Sky Dive",      "blurb_th": "สัตว์จาก Unit 4 บินสูง" }
+  [
+   "campA",
+   "u3"
+  ],
+  [
+   "u3",
+   "u4"
+  ],
+  [
+   "u4",
+   "inn1"
+  ],
+  [
+   "inn1",
+   "u5"
+  ],
+  [
+   "u5",
+   "u6"
+  ],
+  [
+   "u6",
+   "campB"
+  ],
+  [
+   "campB",
+   "u7"
+  ],
+  [
+   "u7",
+   "u8"
+  ],
+  [
+   "u8",
+   "festival"
+  ],
+  [
+   "festival",
+   "sounds"
+  ],
+  [
+   "start",
+   "arena"
+  ],
+  [
+   "arena",
+   "u1"
   ]
+ ],
+ "items": [
+  {
+   "id": "apple",
+   "name_en": "Apple",
+   "name_th": "แอปเปิลฟื้นพลัง",
+   "icon": "🍎",
+   "kind": "heal",
+   "heal_hp": 30,
+   "heal_mana": 0,
+   "price": 6
+  },
+  {
+   "id": "sandwich",
+   "name_en": "Sandwich",
+   "name_th": "แซนด์วิชอิ่มท้อง",
+   "icon": "🥪",
+   "kind": "heal",
+   "heal_hp": 60,
+   "heal_mana": 0,
+   "price": 12
+  },
+  {
+   "id": "tea",
+   "name_en": "Cup of tea",
+   "name_th": "ชาอุ่นฟื้น Mana",
+   "icon": "🍵",
+   "kind": "mana",
+   "heal_hp": 0,
+   "heal_mana": 20,
+   "price": 8
+  }
+ ],
+ "pet_species": [
+  {
+   "id": "lion",
+   "name_en": "Lion",
+   "name_th": "สิงโต",
+   "icon": "🦁",
+   "skill_name": "Mighty Roar",
+   "blurb_th": "สัตว์จาก Unit 8"
+  },
+  {
+   "id": "penguin",
+   "name_en": "Penguin",
+   "name_th": "เพนกวิน",
+   "icon": "🐧",
+   "skill_name": "Ice Slide",
+   "blurb_th": "สัตว์จาก Unit 8"
+  },
+  {
+   "id": "monkey",
+   "name_en": "Monkey",
+   "name_th": "ลิง",
+   "icon": "🐵",
+   "skill_name": "Banana Swing",
+   "blurb_th": "สัตว์จาก Unit 8"
+  },
+  {
+   "id": "parrot",
+   "name_en": "Parrot",
+   "name_th": "นกแก้ว",
+   "icon": "🦜",
+   "skill_name": "Rainbow Song",
+   "blurb_th": "สัตว์จาก Unit 8"
+  }
+ ]
 }

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { Suspense, lazy, useCallback, useState } from 'react';
 import { GameProvider, useGame } from './state/GameContext';
 import { Hud, type View } from './components/Hud';
 import { AuthScreen, SetupScreen } from './screens/AuthScreen';
@@ -9,9 +9,11 @@ import { PetScreen } from './screens/PetScreen';
 import { BagScreen } from './screens/BagScreen';
 import { PvpScreen } from './screens/PvpScreen';
 
+const World3D = lazy(() => import('./world3d/World3D').then((m) => ({ default: m.World3D })));
+
 function Shell() {
   const { phase, notice, refresh } = useGame();
-  const [view, setView] = useState<View>('map');
+  const [view, setView] = useState<View>('world');
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [pvp, setPvp] = useState(false);
   const [live, setLive] = useState<{ hp: number; mana: number } | null>(null);
@@ -23,16 +25,17 @@ function Shell() {
   else if (phase === 'auth') body = <AuthScreen />;
   else if (phase === 'create') body = <CreateCharacter />;
   else {
-    const leaveLesson = () => { setLessonId(null); setLive(null); setView('map'); refresh(); };
+    const leaveLesson = () => { setLessonId(null); setLive(null); setView('world'); refresh(); };
     body = (
       <>
         <Hud view={pvp ? 'pvp' : view} go={(v) => { setPvp(false); setView(v); }} hp={live?.hp} mana={live?.mana} />
         <main className="stage">
           {pvp ? <PvpScreen onExit={() => setPvp(false)} />
             : view === 'lesson' && lessonId ? <LessonScreen lessonId={lessonId} onExit={leaveLesson} onLive={onLive} />
+            : view === 'map' ? <MapScreen onPlay={(id) => { setLessonId(id); setView('lesson'); }} onPvp={() => setPvp(true)} />
             : view === 'pet' ? <PetScreen />
             : view === 'bag' ? <BagScreen />
-            : <MapScreen onPlay={(id) => { setLessonId(id); setView('lesson'); }} onPvp={() => setPvp(true)} />}
+            : <Suspense fallback={<main className="card center"><p>กำลังสร้างโลก 3D…</p></main>}><World3D onPlay={(id) => { setLessonId(id); setView('lesson'); }} onPvp={() => setPvp(true)} /></Suspense>}
         </main>
       </>
     );

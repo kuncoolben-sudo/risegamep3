@@ -8,7 +8,7 @@ export const DEFAULT_APPEARANCE: Appearance = {
   skin: SKINS[1], hairLength: 'short', hairType: 'straight', hairColor: HAIR_COLORS[1], facial: 'none', outfit: OUTFITS[1],
 };
 
-// hair description in the book's own words (Unit 2: Appearance)
+// plain-English hair description
 export function hairLabel(a: Appearance): string {
   return `${a.hairLength} ${a.hairType} hair`;
 }
