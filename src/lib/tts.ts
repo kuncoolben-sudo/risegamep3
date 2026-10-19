@@ -2,8 +2,9 @@
 // voice. It never falls back to the device's default voice, which may be Thai.
 export const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
-// Voices that sound good in en-GB on common platforms (iOS/macOS, Android/Chrome, Windows/Edge)
-const PREFERRED = ['Daniel', 'Kate', 'Serena', 'Oliver', 'Google UK English Female', 'Google UK English Male', 'Microsoft Libby', 'Microsoft Sonia', 'Microsoft Ryan'];
+// en-GB voices on common platforms, lighter/female voices first: they suit a child-like tone best
+// (iOS/macOS, Android/Chrome, Windows/Edge)
+const PREFERRED = ['Kate', 'Serena', 'Martha', 'Google UK English Female', 'Microsoft Libby', 'Microsoft Sonia', 'Daniel', 'Oliver', 'Google UK English Male', 'Microsoft Ryan'];
 
 let cached: SpeechSynthesisVoice | null | undefined;
 
@@ -39,8 +40,11 @@ export function speak(text: string) {
   } else if (synth.getVoices().length > 0) {
     return; // voices exist but none is English: stay silent rather than read English with a Thai voice
   }
-  u.rate = 0.8;
-  u.pitch = 1.05;
+  // slow and clear for young learners; raised pitch gives a friendly child-like tone
+  const words = text.trim().split(/\s+/).length;
+  u.rate = words <= 2 ? 0.6 : 0.68;
+  u.pitch = 1.45;
+  u.volume = 1;
   synth.cancel();
   synth.speak(u);
 }
