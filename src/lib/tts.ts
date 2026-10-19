@@ -1,6 +1,36 @@
-// Reads English aloud with the browser's built-in speech synthesis, always with a British (en-GB)
-// voice. It never falls back to the device's default voice, which may be Thai.
-export const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
+// Reads English aloud. 1) plays the pre-generated Azure MP3 from public/audio (same voice on every
+// device, built by scripts/build-audio.mjs); 2) otherwise uses the browser's speech synthesis with a
+// British (en-GB) voice. It never falls back to the device's default voice, which may be Thai.
+const hasSynth = typeof window !== 'undefined' && 'speechSynthesis' in window;
+export const canSpeak = typeof window !== 'undefined' && (hasSynth || typeof Audio !== 'undefined');
+
+// must match normalize() in scripts/build-audio.mjs
+const normalize = (t: string) => t.trim().toLowerCase().replace(/\s+/g, ' ');
+
+let manifest: Record<string, string> | null = null;
+let manifestLoading: Promise<void> | null = null;
+function loadManifest() {
+  manifestLoading ??= fetch(`${import.meta.env.BASE_URL}audio/manifest.json`, { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : {}))
+    .then((m) => { manifest = m as Record<string, string>; })
+    .catch(() => { manifest = {}; });
+  return manifestLoading;
+}
+
+// one shared element: iOS only lets an element play after it was "unlocked" by a user gesture
+let player: HTMLAudioElement | null = null;
+if (typeof window !== 'undefined' && typeof Audio !== 'undefined') {
+  loadManifest();
+  player = new Audio();
+  const unlock = () => {
+    window.removeEventListener('pointerdown', unlock);
+    if (!player) return;
+    player.muted = true;
+    player.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+    player.play().then(() => { player!.pause(); player!.muted = false; }).catch(() => { if (player) player.muted = false; });
+  };
+  window.addEventListener('pointerdown', unlock);
+}
 
 // en-GB voices on common platforms, lighter/female voices first: they suit a child-like tone best
 // (iOS/macOS, Android/Chrome, Windows/Edge)
@@ -22,14 +52,28 @@ function pickVoice(): SpeechSynthesisVoice | null {
   return voices.find((v) => lang(v).startsWith('en')) ?? null;
 }
 
-if (canSpeak) {
+if (hasSynth) {
   // voices load asynchronously in most browsers
   window.speechSynthesis.addEventListener?.('voiceschanged', () => { cached = undefined; });
 }
 
 export function speak(text: string) {
-  if (!canSpeak || !text) return;
+  if (!text) return;
+  const file = manifest?.[normalize(text)];
+  if (file && player) {
+    if (hasSynth) window.speechSynthesis.cancel();
+    player.src = `${import.meta.env.BASE_URL}audio/${file}`;
+    player.currentTime = 0;
+    player.play().catch(() => speakWithDevice(text)); // autoplay blocked or file missing
+    return;
+  }
+  speakWithDevice(text);
+}
+
+function speakWithDevice(text: string) {
+  if (!hasSynth) return;
   if (!cached) cached = pickVoice(); // retry until voices have loaded (iOS may not fire voiceschanged)
+  if (player) player.pause();
   const voice = cached;
   const synth = window.speechSynthesis;
   const u = new SpeechSynthesisUtterance(text);
