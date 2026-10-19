@@ -5,7 +5,7 @@ import type {
   CharacterRow, ItemRow, LessonRow, LocationRow, LocationStatus, PetRow, PetSpecies, ProgressRow,
 } from '../lib/types';
 
-export type Phase = 'loading' | 'setup' | 'auth' | 'create' | 'ready';
+export type Phase = 'loading' | 'setup' | 'auth' | 'create' | 'ready' | 'error';
 
 interface Game {
   phase: Phase;
@@ -22,6 +22,8 @@ interface Game {
   states: Record<string, LocationStatus>;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
+  loadError: string | null;
+  retry: () => void;
   notice: string | null;
   say: (msg: string) => void;
 }
@@ -48,6 +50,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [inventory, setInventory] = useState<Map<string, number>>(new Map());
   const [states, setStates] = useState<Record<string, LocationStatus>>({});
   const [notice, setNotice] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const noticeTimer = useRef<number>();
   const staticLoaded = useRef(false);
 
@@ -110,15 +114,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!configured) return;
-    refresh().catch((e) => {
+    let dead = false;
+    const timeout = new Promise<never>((_, rej) => window.setTimeout(() => rej(new Error('เชื่อมต่อ Supabase เกิน 12 วินาที — ตรวจ URL/คีย์ และอินเทอร์เน็ต')), 12000));
+    Promise.race([refresh(), timeout]).catch((e) => {
+      if (dead) return;
       console.error(e);
-      setPhase('auth');
+      setLoadError((e as { message?: string })?.message ?? String(e));
+      setPhase('error');
     });
+    // do not call supabase from inside this callback synchronously (auth lock deadlock): defer it
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') refresh().catch(console.error);
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') window.setTimeout(() => refresh().catch(console.error), 0);
     });
-    return () => sub.subscription.unsubscribe();
-  }, [refresh]);
+    return () => { dead = true; sub.subscription.unsubscribe(); };
+  }, [refresh, attempt]);
+
+  const retry = useCallback(() => { setLoadError(null); setPhase('loading'); setAttempt((n) => n + 1); }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
@@ -128,9 +139,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Game>(
     () => ({
       phase, session, character, pet, locations, paths, lessons, items, species, progress, inventory, states,
-      refresh, signOut, notice, say,
+      refresh, signOut, notice, say, loadError, retry,
     }),
-    [phase, session, character, pet, locations, paths, lessons, items, species, progress, inventory, states, refresh, signOut, notice, say],
+    [phase, session, character, pet, locations, paths, lessons, items, species, progress, inventory, states, refresh, signOut, notice, say, loadError, retry],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

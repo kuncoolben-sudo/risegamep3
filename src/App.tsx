@@ -12,7 +12,7 @@ import { PvpScreen } from './screens/PvpScreen';
 const World3D = lazy(() => import('./world3d/World3D').then((m) => ({ default: m.World3D })));
 
 function Shell() {
-  const { phase, notice, refresh } = useGame();
+  const { phase, notice, refresh, loadError, retry } = useGame();
   const [view, setView] = useState<View>('world');
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [pvp, setPvp] = useState(false);
@@ -21,6 +21,7 @@ function Shell() {
 
   let body;
   if (phase === 'loading') body = <main className="card center"><p>กำลังโหลด…</p></main>;
+  else if (phase === 'error') body = <main className="card center"><h2>เชื่อมต่อไม่สำเร็จ</h2><pre style={{ whiteSpace: 'pre-wrap', fontSize: 13 }}>{loadError}</pre><p className="muted small">ตรวจว่ารัน SQL (migrations + seed) แล้ว และเปิด Anonymous sign-ins แล้ว</p><button className="btn" onClick={retry}>ลองใหม่</button></main>;
   else if (phase === 'setup') body = <SetupScreen />;
   else if (phase === 'auth') body = <AuthScreen />;
   else if (phase === 'create') body = <CreateCharacter />;
