@@ -11,6 +11,8 @@
     "seed:build": "node scripts/build-seed.mjs",
     "db:test": "bash scripts/test-db.sh",
     "models:build": "python3 tools/blender/build_models.py",
+    "characters:build": "python3 tools/blender/build_characters.py",
+    "pets:build": "python3 tools/blender/build_pets.py",
     "audio:build": "node scripts/build-audio.mjs",
     "db:migrate": "bash scripts/migrate.sh",
     "db:test:migrate": "bash scripts/test-migrate.sh"

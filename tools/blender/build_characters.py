@@ -17,6 +17,7 @@ import sys
 import bpy
 import bmesh
 
+# exec'd without __file__ (e.g. from the Blender MCP) it falls back to the repo's usual location
 HERE = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else r'F:\risewebgame\p3\tools\blender'
 OUT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]) else os.path.join(HERE, '../../public/models'))
 

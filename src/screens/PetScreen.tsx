@@ -1,18 +1,25 @@
 import { useGame } from '../state/GameContext';
 import { STAGE_NAMES, STAGE_THRESHOLDS } from '../lib/util';
 import { Bar } from '../components/Hud';
+import { PetShowcase } from '../components/PetShowcase';
+import { isFantasyPet, petForm } from '../world3d/pets';
 
 export function PetScreen() {
   const { pet, species, progress } = useGame();
   const sp = species.find((s) => s.id === pet?.species_id);
   if (!pet || !sp) return null;
   const cleared = progress.size;
+  const fantasy = isFantasyPet(sp.id);
   const next = STAGE_THRESHOLDS[pet.stage - 1];
   return (
     <section className="card center">
-      <div className="pet-hero" style={{ fontSize: 80 + pet.stage * 28 }}>{sp.icon}{pet.stage === 3 && <span className="sparkle">✨</span>}</div>
+      {fantasy ? (
+        <PetShowcase species={sp.id} stage={pet.stage} maxStage={pet.stage} height={300} />
+      ) : (
+        <div className="pet-hero" style={{ fontSize: 80 + pet.stage * 28 }}>{sp.icon}{pet.stage === 3 && <span className="sparkle">✨</span>}</div>
+      )}
       <h2>{sp.name_en} · {sp.name_th}</h2>
-      <p className="badge">ระดับ {pet.stage}: {STAGE_NAMES[pet.stage - 1]}</p>
+      <p className="badge">ระดับ {pet.stage}: {fantasy ? petForm(sp.id, pet.stage).name_th : STAGE_NAMES[pet.stage - 1]}</p>
       <p>{sp.blurb_th}</p>
       {next ? (
         <>
@@ -35,7 +42,7 @@ export function PetScreen() {
         </div>
       )}
       <div className="skill">
-        <b>⚡ ทักษะ: {sp.skill_name}</b>
+        <b>⚡ ทักษะ: {fantasy ? `${petForm(sp.id, Math.max(pet.stage, 2)).power_th} (${petForm(sp.id, Math.max(pet.stage, 2)).power_en})` : sp.skill_name}</b>
         <p>{pet.stage >= 2 ? 'ใช้ได้ในการดวล (ใช้ Mana 10)' : `ปลดล็อกเมื่อเติบโตถึงระดับ 2 (ผ่าน ${STAGE_THRESHOLDS[0]} บทเรียน)`}</p>
       </div>
     </section>
