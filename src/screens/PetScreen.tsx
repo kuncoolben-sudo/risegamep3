@@ -1,14 +1,16 @@
 import { useGame } from '../state/GameContext';
-import { STAGE_NAMES, STAGE_THRESHOLDS } from '../lib/util';
+import { STAGE_NAMES, STAGE_THRESHOLDS, STAT_BASE, STAT_PER_STAR, statValue, totalStars } from '../lib/util';
 import { Bar } from '../components/Hud';
 import { PetShowcase } from '../components/PetShowcase';
-import { isFantasyPet, petForm } from '../world3d/pets';
+import { PETS, isFantasyPet, petForm } from '../world3d/pets';
 
 export function PetScreen() {
   const { pet, species, progress } = useGame();
   const sp = species.find((s) => s.id === pet?.species_id);
   if (!pet || !sp) return null;
   const cleared = progress.size;
+  const stars = totalStars(progress);
+  const stat = statValue(stars);
   const fantasy = isFantasyPet(sp.id);
   const next = STAGE_THRESHOLDS[pet.stage - 1];
   return (
@@ -35,15 +37,30 @@ export function PetScreen() {
           <Bar value={pet.hp} max={pet.max_hp} kind="hp" />
           <Bar value={pet.mana} max={pet.max_mana} kind="mana" />
           <div className="stat-row">
-            <span>⚔️ โจมตี <b>{10 + 2 * pet.stage}</b></span>
-            <span>⚡ ทักษะ <b>{pet.stage >= 2 ? 18 + 3 * pet.stage : '🔒'}</b></span>
+            <span>⭐ ดาวสะสม <b>{stars}</b></span>
+            <span>⚔️ ATK <b>{stat}</b></span>
+            <span>💨 SPD <b>{stat}</b></span>
+            <span>🛡️ DEF <b>{stat}</b></span>
           </div>
+          <p className="muted small">ทุกสเตตัส = {STAT_BASE} + {STAT_PER_STAR} ต่อ 1 ดาวที่ได้ในบทเรียน (นับผลที่ดีที่สุดของแต่ละบท) — ทำบทเดิมให้ได้ดาวเพิ่มก็เพิ่มสเตตัสได้</p>
           <p className="muted small">HP/Mana เป็นของสัตว์เลี้ยงเท่านั้น ใช้ในการดวล ฟื้นฟูที่แคมป์/โรงเตี๊ยม หรือใช้ไอเทมในกระเป๋า</p>
         </div>
       )}
       <div className="skill">
-        <b>⚡ ทักษะ: {fantasy ? `${petForm(sp.id, Math.max(pet.stage, 2)).power_th} (${petForm(sp.id, Math.max(pet.stage, 2)).power_en})` : sp.skill_name}</b>
-        <p>{pet.stage >= 2 ? 'ใช้ได้ในการดวล (ใช้ Mana 10)' : `ปลดล็อกเมื่อเติบโตถึงระดับ 2 (ผ่าน ${STAGE_THRESHOLDS[0]} บทเรียน)`}</p>
+        <b>⚡ ท่าที่ใช้ในการดวล (ออกเอง สุ่มจากร่างที่ปลดล็อก)</b>
+        {fantasy ? (
+          <ul className="power-list">
+            {PETS[sp.id].forms.map((f, i) => (
+              <li key={f.power_en} className={i + 1 <= pet.stage ? '' : 'locked'}>
+                {i + 1 <= pet.stage ? '✅' : '🔒'} ร่าง {i + 1} · {f.power_th} <small>({f.power_en})</small>
+                {i + 1 === pet.stage && pet.stage > 1 && <small> — ออกบ่อยที่สุด</small>}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>{sp.skill_name}</p>
+        )}
+        <p className="muted small">ท่าละ 10 Mana ถ้า Mana พอ สัตว์เลี้ยงจะออกท่าเองราวครึ่งหนึ่งของการโจมตี ถ้าเติบโตแล้ว ท่าของร่างปัจจุบันออกบ่อยที่สุด ที่เหลือสุ่มจากร่างก่อนหน้า</p>
       </div>
     </section>
   );

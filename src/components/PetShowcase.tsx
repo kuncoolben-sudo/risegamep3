@@ -31,7 +31,7 @@ export function PetShowcase({ species, stage, maxStage = 3, height = 320 }: { sp
         <div>
           <b>⚡ {info.power_th}</b> <small>({info.power_en})</small>
           <p className="muted small">
-            {locked ? `ร่างนี้ยังไม่ปลดล็อก — เติบโตด้วยการเรียน (ผ่านบทเรียน ${STAGE_THRESHOLDS[st - 2]} บท)` : st === 1 ? 'ท่าโชว์พลังของร่างแรก (ใช้ในการดวลได้เมื่อเติบโตถึงร่าง 2)' : 'ใช้ได้ในการดวล (ใช้ Mana 10)'}
+            {locked ? `ร่างนี้ยังไม่ปลดล็อก — เติบโตด้วยการเรียน (ผ่านบทเรียน ${STAGE_THRESHOLDS[st - 2]} บท)` : 'ออกเองในการดวล (ใช้ Mana 10)'}
           </p>
         </div>
         <button className="btn" onClick={() => setCastKey((k) => k + 1)}>✨ ปล่อยพลัง</button>

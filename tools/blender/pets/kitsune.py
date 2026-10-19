@@ -136,7 +136,10 @@ def both(deg_x):
     return {'LegFL': R(deg_x), 'LegFR': R(deg_x)}
 
 
-CAST = {
+def cast_keys(pose, body):
+    """The Cast clip of form `pose` as played by a body of form `body` (the tails of the later forms are more)."""
+    b = body
+    return {
     # 1. Wisdom Fire: sit up, one paw reaching out to throw the foxfire
     1: [
         (0, {}),
@@ -149,19 +152,22 @@ CAST = {
     # 2. Illusion Mist: stand tall, the five tails sweep out wide
     2: [
         (0, {}),
-        (12, {'Rig': R(-6, loc=(0, 0, 0.05)), 'Head': R(-14), **raise_tails(2, 12), **fan_out(2, 8)}),
-        (24, {'Rig': R(-8, loc=(0, 0, 0.08)), 'Head': R(-20), **raise_tails(2, 22), **fan_out(2, 30), 'EarL': R(0, 0, 14), 'EarR': R(0, 0, -14)}),
-        (40, {'Rig': R(-8, loc=(0, 0, 0.08)), 'Head': R(-18), **raise_tails(2, 16), **fan_out(2, 18)}),
-        (56, {'Rig': R(-2), 'Head': R(-4), **fan_out(2, 6)}),
+        (12, {'Rig': R(-6, loc=(0, 0, 0.05)), 'Head': R(-14), **raise_tails(b, 12), **fan_out(b, 8)}),
+        (24, {'Rig': R(-8, loc=(0, 0, 0.08)), 'Head': R(-20), **raise_tails(b, 22), **fan_out(b, 30), 'EarL': R(0, 0, 14), 'EarR': R(0, 0, -14)}),
+        (40, {'Rig': R(-8, loc=(0, 0, 0.08)), 'Head': R(-18), **raise_tails(b, 16), **fan_out(b, 18)}),
+        (56, {'Rig': R(-2), 'Head': R(-4), **fan_out(b, 6)}),
         (72, {}),
     ],
     # 3. Gate of Knowledge: tails fully fanned and raised, front paws pushing the gate open
     3: [
         (0, {}),
-        (14, {'Rig': R(-10, loc=(0, 0, 0.1)), 'Head': R(-12), **raise_tails(3, 10), **fan_out(3, 10), **both(-35)}),
-        (26, {'Rig': R(-14, loc=(0, 0, 0.18)), 'Head': R(-18), **raise_tails(3, 24), **fan_out(3, 28), **both(-85), 'EarL': R(0, 0, 14), 'EarR': R(0, 0, -14)}),
-        (46, {'Rig': R(-14, loc=(0, 0, 0.2)), 'Head': R(-16), **raise_tails(3, 20), **fan_out(3, 22), **both(-80)}),
-        (60, {'Rig': R(-4, loc=(0, 0, 0.04)), 'Head': R(-4), **fan_out(3, 6), **both(-20)}),
+        (14, {'Rig': R(-10, loc=(0, 0, 0.1)), 'Head': R(-12), **raise_tails(b, 10), **fan_out(b, 10), **both(-35)}),
+        (26, {'Rig': R(-14, loc=(0, 0, 0.18)), 'Head': R(-18), **raise_tails(b, 24), **fan_out(b, 28), **both(-85), 'EarL': R(0, 0, 14), 'EarR': R(0, 0, -14)}),
+        (46, {'Rig': R(-14, loc=(0, 0, 0.2)), 'Head': R(-16), **raise_tails(b, 20), **fan_out(b, 22), **both(-80)}),
+        (60, {'Rig': R(-4, loc=(0, 0, 0.04)), 'Head': R(-4), **fan_out(b, 6), **both(-20)}),
         (72, {}),
     ],
-}
+}[pose]
+
+
+CAST = {f: cast_keys(f, f) for f in (1, 2, 3)}

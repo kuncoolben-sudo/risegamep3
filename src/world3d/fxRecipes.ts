@@ -143,10 +143,10 @@ const recipes: Record<string, (c: Ctx) => LayerSpec[]> = {
   },
 };
 
-/** The effect for a pet form, or null for species without one. */
-export function effectFor(species: string, stage: number): EffectSpec | null {
-  const build = recipes[`${species}-${clampStage(stage)}`];
+/** The effect of the power of form `powerForm`, played by a body of form `bodyStage` (an evolved pet also casts its earlier powers). */
+export function effectFor(species: string, powerForm: number, bodyStage: number = powerForm): EffectSpec | null {
+  const build = recipes[`${species}-${clampStage(powerForm)}`];
   if (!build) return null;
-  const f = petForm(species, stage);
-  return { duration: 3.2, layers: build({ m: f.anchors.mouth, top: f.anchors.top, body: f.anchors.body, k: f.k, D: 2.4 + 0.5 * (clampStage(stage) - 1) }) };
+  const f = petForm(species, bodyStage);
+  return { duration: 3.2, layers: build({ m: f.anchors.mouth, top: f.anchors.top, body: f.anchors.body, k: f.k, D: 2.4 + 0.5 * (clampStage(powerForm) - 1) }) };
 }

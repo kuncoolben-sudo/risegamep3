@@ -293,7 +293,7 @@ class Pet:
     def animate(self, clip, keys):
         """keys = [(frame, {pivot: {'rot': (x, y, z) degrees, 'loc': (x, y, z), 'sc': s}})]; a pivot missing from
         a key sits at rest there. Each clip becomes an NLA track named `clip`, exported as one glTF animation."""
-        names = sorted({q for _, st in keys for q in st})
+        names = sorted({q for _, st in keys for q in st if q in self.piv})  # a pose may name pivots this form lacks
         for q in names:
             ob, _ = self.piv[q]
             rest = self.rest[q]
