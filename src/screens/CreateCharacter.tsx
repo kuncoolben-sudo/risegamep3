@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Avatar, DEFAULT_APPEARANCE, HAIR_COLORS, OUTFITS, SKINS, hairLabel } from '../components/Avatar';
+import { Avatar, DEFAULT_APPEARANCE, HAIR_COLORS, OUTFITS, PRESET_LOOKS, SKINS, hairLabel } from '../components/Avatar';
 import { rpc, errorText } from '../lib/supabase';
-import type { Appearance } from '../lib/types';
+import { CHARACTER_PRESETS, type Appearance, type CharacterPreset } from '../lib/types';
 import { useGame } from '../state/GameContext';
 
 export function CreateCharacter() {
@@ -11,7 +11,9 @@ export function CreateCharacter() {
   const [pet, setPet] = useState<string>('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const set = <K extends keyof Appearance>(k: K, v: Appearance[K]) => setLook((l) => ({ ...l, [k]: v }));
+  // editing any custom field leaves preset mode
+  const set = <K extends keyof Appearance>(k: K, v: Appearance[K]) => setLook(({ preset: _drop, ...l }) => ({ ...l, [k]: v }));
+  const pick = (p: CharacterPreset) => setLook({ ...PRESET_LOOKS[p].look, preset: p });
 
   async function submit() {
     setBusy(true);
@@ -50,6 +52,17 @@ export function CreateCharacter() {
           <p className="pet-preview">{pet ? species.find((s) => s.id === pet)?.icon : '❔'}</p>
         </div>
         <div className="fields">
+          <div>ตัวละครต้นแบบ
+            <div className="chips">
+              {CHARACTER_PRESETS.map((p) => (
+                <button key={p} className={`chip ${look.preset === p ? 'on' : ''}`} onClick={() => pick(p)} title={PRESET_LOOKS[p].tagline}>
+                  {PRESET_LOOKS[p].name}
+                </button>
+              ))}
+              <button className={`chip ${look.preset ? '' : 'on'}`} onClick={() => setLook(DEFAULT_APPEARANCE)}>กำหนดเอง</button>
+            </div>
+            {look.preset && <p className="muted small">{PRESET_LOOKS[look.preset].name} — {PRESET_LOOKS[look.preset].tagline} (แก้สี/ทรงผมด้านล่างเพื่อกลับเป็นแบบกำหนดเอง)</p>}
+          </div>
           <label>ชื่อตัวละคร
             <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น Mina" />
           </label>

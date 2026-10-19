@@ -1,4 +1,4 @@
-import type { Appearance } from '../lib/types';
+import type { Appearance, CharacterPreset } from '../lib/types';
 
 export const SKINS = ['#ffdfc4', '#f1c27d', '#c68642', '#8d5524'];
 export const HAIR_COLORS = ['#2b1b0e', '#6b3e1c', '#e0b050', '#c0392b', '#7f8c8d', '#3b82f6'];
@@ -6,6 +6,16 @@ export const OUTFITS = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '
 
 export const DEFAULT_APPEARANCE: Appearance = {
   skin: SKINS[1], hairLength: 'short', hairType: 'straight', hairColor: HAIR_COLORS[1], facial: 'none', outfit: OUTFITS[1],
+};
+
+// Concept-sheet characters (3D models char_<id>.glb). The colours only drive the 2D avatar; the 3D model keeps its own look.
+export const PRESET_LOOKS: Record<CharacterPreset, { name: string; tagline: string; look: Omit<Appearance, 'preset'> }> = {
+  kai: { name: 'Kai', tagline: 'The Brave Explorer', look: { skin: '#f1c9a0', hairLength: 'short', hairType: 'straight', hairColor: '#7a4423', facial: 'none', outfit: '#2f6fd6' } },
+  pond: { name: 'Pond', tagline: 'The Smart Thinker', look: { skin: '#f4d2b0', hairLength: 'short', hairType: 'straight', hairColor: '#25211f', facial: 'none', outfit: '#4f9a5a' } },
+  beam: { name: 'Beam', tagline: 'The Kind Leader', look: { skin: '#f1c9a0', hairLength: 'short', hairType: 'straight', hairColor: '#c96b2c', facial: 'none', outfit: '#d63a2f' } },
+  lily: { name: 'Lily', tagline: 'The Cheerful Dreamer', look: { skin: '#f6d6bd', hairLength: 'long', hairType: 'wavy', hairColor: '#7a4a2e', facial: 'none', outfit: '#f4a8c4' } },
+  minnie: { name: 'Minnie', tagline: 'The Creative Artist', look: { skin: '#f6d6bd', hairLength: 'short', hairType: 'straight', hairColor: '#2e2230', facial: 'none', outfit: '#a58be0' } },
+  maya: { name: 'Maya', tagline: 'The Nature Lover', look: { skin: '#f1c9a0', hairLength: 'long', hairType: 'straight', hairColor: '#c8481f', facial: 'none', outfit: '#5fa05a' } },
 };
 
 // plain-English hair description
