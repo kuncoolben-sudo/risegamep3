@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { Avatar, DEFAULT_APPEARANCE, HAIR_COLORS, OUTFITS, PRESET_LOOKS, SKINS, hairLabel } from '../components/Avatar';
 import { rpc, errorText } from '../lib/supabase';
 import { CHARACTER_PRESETS, type Appearance, type CharacterPreset } from '../lib/types';
 import { useGame } from '../state/GameContext';
+
+const CharacterPreview3D = lazy(() => import('../world3d/CharacterPreview3D'));
 
 export function CreateCharacter() {
   const { species, refresh } = useGame();
@@ -47,7 +49,9 @@ export function CreateCharacter() {
       <h1>สร้างตัวละครของคุณ</h1>
       <div className="create-grid">
         <div className="preview">
-          <Avatar look={look} size={150} />
+          <Suspense fallback={<Avatar look={look} size={150} />}>
+            <CharacterPreview3D look={look} />
+          </Suspense>
           <p className="muted">{hairLabel(look)}</p>
           <p className="pet-preview">{pet ? species.find((s) => s.id === pet)?.icon : '❔'}</p>
         </div>
