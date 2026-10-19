@@ -2,6 +2,7 @@ import { useEffect, useMemo, type MutableRefObject } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
+import { modelUrl } from './assets';
 import type { Appearance } from '../lib/types';
 
 export interface Limbs {
@@ -26,7 +27,7 @@ function prepare(scene: THREE.Object3D) {
 
 // Chibi player model built by tools/blender/build_models.py. Look comes from characters.appearance.
 export function Character3D({ look, limbs }: { look: Appearance; limbs?: MutableRefObject<Limbs> }) {
-  const gltf = useGLTF('/models/character.glb');
+  const gltf = useGLTF(modelUrl('character'));
   const model = useMemo(() => prepare(gltf.scene), [gltf]);
 
   useEffect(() => {
@@ -61,9 +62,9 @@ export function Character3D({ look, limbs }: { look: Appearance; limbs?: Mutable
 }
 
 export function Pet3D({ species, stage }: { species: string; stage: number }) {
-  const gltf = useGLTF(`/models/pet_${species}.glb`);
+  const gltf = useGLTF(modelUrl(`pet_${species}`));
   const model = useMemo(() => prepare(gltf.scene), [gltf]);
   return <primitive object={model} scale={0.7 + stage * 0.22} />;
 }
 
-for (const f of ['character', 'pet_lion', 'pet_penguin', 'pet_monkey', 'pet_parrot']) useGLTF.preload(`/models/${f}.glb`);
+for (const f of ['character', 'pet_lion', 'pet_penguin', 'pet_monkey', 'pet_parrot']) useGLTF.preload(modelUrl(f));
