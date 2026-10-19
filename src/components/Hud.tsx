@@ -12,12 +12,12 @@ export function Bar({ value, max, kind }: { value: number; max: number; kind: 'h
   );
 }
 
-export function Hud({ view, go, hp, mana }: { view: View; go: (v: View) => void; hp?: number; mana?: number }) {
+export function Hud({ view, go, hp, mana, overlay }: { view: View; go: (v: View) => void; hp?: number; mana?: number; overlay?: boolean }) {
   const { character, pet, species, signOut } = useGame();
   if (!character) return null;
   const icon = species.find((s) => s.id === pet?.species_id)?.icon;
   return (
-    <header className="hud">
+    <header className={`hud${overlay ? ' overlay' : ''}`}>
       <div className="hud-who">
         <Avatar look={character.appearance} size={40} />
         <div>

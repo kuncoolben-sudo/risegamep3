@@ -27,22 +27,32 @@ function Shell() {
   else if (phase === 'create') body = <CreateCharacter />;
   else {
     const leaveLesson = () => { setLessonId(null); setLive(null); setView('world'); refresh(); };
-    body = (
-      <>
-        <Hud view={pvp ? 'pvp' : view} go={(v) => { setPvp(false); setView(v); }} hp={live?.hp} mana={live?.mana} />
-        <main className="stage">
-          {pvp ? <PvpScreen onExit={() => setPvp(false)} />
-            : view === 'lesson' && lessonId ? <LessonScreen lessonId={lessonId} onExit={leaveLesson} onLive={onLive} />
-            : view === 'map' ? <MapScreen onPlay={(id) => { setLessonId(id); setView('lesson'); }} onPvp={() => setPvp(true)} />
-            : view === 'pet' ? <PetScreen />
-            : view === 'bag' ? <BagScreen />
-            : <Suspense fallback={<main className="card center"><p>กำลังสร้างโลก 3D…</p></main>}><World3D onPlay={(id) => { setLessonId(id); setView('lesson'); }} onPvp={() => setPvp(true)} /></Suspense>}
-        </main>
-      </>
-    );
+    const play = (id: string) => { setLessonId(id); setView('lesson'); };
+    const hud = (overlay: boolean) => <Hud overlay={overlay} view={pvp ? 'pvp' : view} go={(v) => { setPvp(false); setView(v); }} hp={live?.hp} mana={live?.mana} />;
+    // the 3D world is full screen with the status bar drawn on top of it
+    if (view === 'world' && !pvp) {
+      body = (
+        <Suspense fallback={<main className="card center"><p>กำลังสร้างโลก 3D…</p></main>}>
+          <World3D hud={hud(true)} onPlay={play} onPvp={() => setPvp(true)} />
+        </Suspense>
+      );
+    } else {
+      body = (
+        <>
+          {hud(false)}
+          <main className="stage">
+            {pvp ? <PvpScreen onExit={() => setPvp(false)} />
+              : view === 'lesson' && lessonId ? <LessonScreen lessonId={lessonId} onExit={leaveLesson} onLive={onLive} />
+              : view === 'map' ? <MapScreen onPlay={play} onPvp={() => setPvp(true)} />
+              : view === 'pet' ? <PetScreen />
+              : <BagScreen />}
+          </main>
+        </>
+      );
+    }
   }
   return (
-    <div className="app">
+    <div className={`app${phase === 'ready' && view === 'world' && !pvp ? ' full' : ''}`}>
       {body}
       {notice && <div className="toast" role="status">{notice}</div>}
     </div>

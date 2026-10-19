@@ -1,5 +1,5 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Clone, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGame } from '../state/GameContext';
@@ -83,10 +83,9 @@ function Scenery({ locations, paths }: { locations: LocationRow[]; paths: [strin
   return <>{items.map((it, i) => <group key={i} position={[it.x, 0, it.z]} rotation={[0, it.ry, 0]} scale={it.kind === 'flower' ? it.s * 1.4 : it.s}><Clone object={src[it.kind]} castShadow /></group>)}</>;
 }
 
-function Player({ start, input, target, locations, onNear }: {
+function Player({ start, input, locations, onNear }: {
   start: [number, number];
   input: React.MutableRefObject<Input>;
-  target: React.MutableRefObject<THREE.Vector3 | null>;
   locations: LocationRow[];
   onNear: (id: string | null) => void;
 }) {
@@ -105,12 +104,14 @@ function Player({ start, input, target, locations, onNear }: {
 
   useEffect(() => {
     const typing = () => ['INPUT', 'TEXTAREA'].includes((document.activeElement?.tagName ?? ''));
-    const down = (e: KeyboardEvent) => { if (!typing()) { keys.current.add(e.key.toLowerCase()); target.current = null; } };
+    const down = (e: KeyboardEvent) => { if (!typing()) keys.current.add(e.key.toLowerCase()); };
     const up = (e: KeyboardEvent) => keys.current.delete(e.key.toLowerCase());
+    const clear = () => keys.current.clear();
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
-    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
-  }, [target]);
+    window.addEventListener('blur', clear);
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear); };
+  }, []);
 
   useEffect(() => { group.current?.position.set(start[0], 0, start[1]); camera.position.set(start[0], 16, start[1] + 14); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -118,14 +119,8 @@ function Player({ start, input, target, locations, onNear }: {
     const g = group.current;
     if (!g || !character) return;
     const k = keys.current;
-    let dx = (k.has('d') || k.has('arrowright') ? 1 : 0) - (k.has('a') || k.has('arrowleft') ? 1 : 0) + input.current.x;
-    let dz = (k.has('s') || k.has('arrowdown') ? 1 : 0) - (k.has('w') || k.has('arrowup') ? 1 : 0) + input.current.z;
-    if (dx === 0 && dz === 0 && target.current) {
-      const tx = target.current.x - g.position.x, tz = target.current.z - g.position.z;
-      const d = Math.hypot(tx, tz);
-      if (d < 0.25) target.current = null;
-      else { dx = tx / d; dz = tz / d; }
-    }
+    const dx = (k.has('d') || k.has('arrowright') ? 1 : 0) - (k.has('a') || k.has('arrowleft') ? 1 : 0) + input.current.x;
+    const dz = (k.has('s') || k.has('arrowdown') ? 1 : 0) - (k.has('w') || k.has('arrowup') ? 1 : 0) + input.current.z;
     const mag = Math.min(1, Math.hypot(dx, dz));
     const moving = mag > 0.05;
     if (moving) {
@@ -184,30 +179,53 @@ function Player({ start, input, target, locations, onNear }: {
   );
 }
 
-function Joystick({ input }: { input: React.MutableRefObject<Input> }) {
-  const [knob, setKnob] = useState({ x: 0, y: 0 });
-  const base = useRef<HTMLDivElement>(null);
-  const move = (e: React.PointerEvent) => {
-    const r = base.current!.getBoundingClientRect();
-    let x = (e.clientX - (r.left + r.width / 2)) / (r.width / 2), y = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
-    const m = Math.hypot(x, y);
-    if (m > 1) { x /= m; y /= m; }
-    input.current = { x, z: y };
-    setKnob({ x, y });
+// Floating joystick: press anywhere on the world, drag to move, release to stop.
+function JoystickLayer({ input }: { input: React.MutableRefObject<Input> }) {
+  const RADIUS = 56;
+  const [ui, setUi] = useState<{ ox: number; oy: number; kx: number; ky: number } | null>(null);
+  const pointer = useRef<number | null>(null);
+  const origin = useRef({ x: 0, y: 0 });
+  const local = (e: React.PointerEvent) => {
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
-  const end = () => { input.current = { x: 0, z: 0 }; setKnob({ x: 0, y: 0 }); };
+  const stop = () => { pointer.current = null; input.current = { x: 0, z: 0 }; setUi(null); };
   return (
-    <div className="joy" ref={base} onPointerDown={(e) => { (e.target as Element).setPointerCapture(e.pointerId); move(e); }} onPointerMove={(e) => e.buttons && move(e)} onPointerUp={end} onPointerCancel={end}>
-      <div className="joy-knob" style={{ transform: `translate(${knob.x * 34}px, ${knob.y * 34}px)` }} />
+    <div className="joy-layer"
+      onPointerDown={(e) => {
+        if (pointer.current !== null) return;
+        pointer.current = e.pointerId;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        origin.current = local(e);
+        setUi({ ox: origin.current.x, oy: origin.current.y, kx: 0, ky: 0 });
+      }}
+      onPointerMove={(e) => {
+        if (e.pointerId !== pointer.current) return;
+        const p = local(e);
+        let dx = p.x - origin.current.x, dy = p.y - origin.current.y;
+        const m = Math.hypot(dx, dy);
+        if (m > RADIUS) { dx *= RADIUS / m; dy *= RADIUS / m; }
+        const nx = dx / RADIUS, ny = dy / RADIUS;
+        input.current = Math.hypot(nx, ny) < 0.12 ? { x: 0, z: 0 } : { x: nx, z: ny };
+        setUi({ ox: origin.current.x, oy: origin.current.y, kx: dx, ky: dy });
+      }}
+      onPointerUp={(e) => { if (e.pointerId === pointer.current) stop(); }}
+      onPointerCancel={(e) => { if (e.pointerId === pointer.current) stop(); }}
+      onLostPointerCapture={stop}
+    >
+      {ui && (
+        <div className="joy" style={{ left: ui.ox - 60, top: ui.oy - 60 }}>
+          <div className="joy-knob" style={{ transform: `translate(${ui.kx}px, ${ui.ky}px)` }} />
+        </div>
+      )}
     </div>
   );
 }
 
-export function World3D({ onPlay, onPvp }: { onPlay: (lessonId: string) => void; onPvp: () => void }) {
+export function World3D({ onPlay, onPvp, hud }: { onPlay: (lessonId: string) => void; onPvp: () => void; hud?: ReactNode }) {
   const { locations, paths, states, character } = useGame();
   const { visit, byId, here } = useTravel();
   const input = useRef<Input>({ x: 0, z: 0 });
-  const target = useRef<THREE.Vector3 | null>(null);
   const [near, setNear] = useState<string | null>(null);
   const [sel, setSel] = useState<string | null>(null);
   const [lowPower, setLowPower] = useState(() => { try { return localStorage.getItem('lowPower') === '1'; } catch { return false; } });
@@ -237,7 +255,7 @@ export function World3D({ onPlay, onPvp }: { onPlay: (lessonId: string) => void;
 
   const toggleLow = () => setLowPower((v) => { try { localStorage.setItem('lowPower', v ? '0' : '1'); } catch { /* ignore */ } return !v; });
   const nearLoc = near ? byId.get(near) : undefined;
-  const coarse = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+  const coarse = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
 
   return (
     <div className="world">
@@ -253,8 +271,7 @@ export function World3D({ onPlay, onPvp }: { onPlay: (lessonId: string) => void;
             <circleGeometry args={[120, 48]} />
             <meshStandardMaterial color="#58b7ff" />
           </mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow
-            onPointerDown={(e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); target.current = e.point.clone(); }}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
             <circleGeometry args={[WORLD_RADIUS + 1.5, 64]} />
             <meshStandardMaterial color="#86cf62" />
           </mesh>
@@ -264,13 +281,14 @@ export function World3D({ onPlay, onPvp }: { onPlay: (lessonId: string) => void;
           })}
           {locations.map((l) => <Building key={l.id} loc={l} status={states[l.id] ?? 'locked'} active={near === l.id} />)}
           <Scenery locations={locations} paths={paths} />
-          {character && <Player start={start} input={input} target={target} locations={locations} onNear={onNear} />}
+          {character && <Player start={start} input={input} locations={locations} onNear={onNear} />}
         </Suspense>
       </Canvas>
 
-      <div className="world-hint">{coarse ? 'ลากจอยสติ๊กเพื่อเดิน' : 'WASD / ลูกศร หรือคลิกพื้นเพื่อเดิน · E เพื่อเข้า'}</div>
+      <JoystickLayer input={input} />
+      {hud}
+      <div className="world-hint">{coarse ? 'แตะค้างตรงไหนก็ได้บนจอแล้วลากเพื่อเดิน' : 'ลากเมาส์ค้าง หรือ WASD / ลูกศร · E เพื่อเข้า'}</div>
       <button className="btn ghost world-low" onClick={toggleLow}>{lowPower ? '⚡ โหมดประหยัด: เปิด' : '⚡ โหมดประหยัด'}</button>
-      {coarse && <Joystick input={input} />}
       {nearLoc && !sel && (
         <button className="btn big enter-btn" onClick={enter}>{nearLoc.icon} เข้า {nearLoc.name_en}</button>
       )}

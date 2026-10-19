@@ -125,3 +125,17 @@ input, textarea { font: inherit; padding: 10px 12px; border: 2px solid var(--lin
 .label3d.open { border-color: var(--gold); } .label3d.cleared { border-color: var(--green); } .label3d.locked { opacity: .75; }
 .joy { position: absolute; left: 20px; bottom: 24px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.25); border: 3px solid rgba(255,255,255,.6); display: grid; place-items: center; touch-action: none; }
 .joy-knob { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.85); box-shadow: 0 3px 8px rgba(0,0,0,.3); pointer-events: none; }
+
+/* full-screen world: status bar overlaid, floating joystick anywhere */
+.app.full { max-width: none; padding: 0; }
+.app.full .world { height: 100dvh; border-radius: 0; border: 0; box-shadow: none; }
+.joy-layer { position: absolute; inset: 0; z-index: 1; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: grab; }
+.joy { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.22); border: 3px solid rgba(255,255,255,.65); display: grid; place-items: center; pointer-events: none; }
+.hud.overlay { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 6; margin: 0; pointer-events: none; }
+.hud.overlay > * { pointer-events: auto; }
+.hud.overlay .hud-bars { max-width: 240px; }
+.world-hint { z-index: 2; left: 12px; top: auto; bottom: 12px; font-size: .78rem; }
+.world-low { z-index: 6; left: auto; right: 12px; top: auto; bottom: 12px; }
+.enter-btn { z-index: 6; bottom: 56px; }
+.world-panel { z-index: 7; top: 92px; max-height: calc(100% - 150px); }
+@media (max-width: 800px) { .world-panel { top: 128px; max-height: calc(100% - 190px); } }
