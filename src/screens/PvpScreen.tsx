@@ -15,7 +15,7 @@ const ACTIONS: { id: string; label: string; help: string }[] = [
 const ACTION_NAME: Record<string, string> = { attack: 'โจมตี', skill: 'ใช้ทักษะ', guard: 'ป้องกัน', focus: 'รวบรวมสมาธิ' };
 
 export function PvpScreen({ onExit }: { onExit: () => void }) {
-  const { character, say, refresh } = useGame();
+  const { character, pet, say, refresh } = useGame();
   const [match, setMatch] = useState<MatchRow | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -94,14 +94,14 @@ export function PvpScreen({ onExit }: { onExit: () => void }) {
       <section className="card center">
         <h2>⚔️ ลานประลอง 1v1</h2>
         <p>ดวลกับผู้เล่นอีกคนแบบผลัดกันเล่น ตอบคำถามภาษาอังกฤษถูกเพื่อเพิ่มพลังโจมตี</p>
-        <p className="muted">HP/Mana ใช้ในการดวลเท่านั้น (ทำบทเรียนไม่เสียพลัง) ไม่มีระบบธาตุ ไม่เสียสัตว์เลี้ยงเมื่อแพ้</p>
-        {character && (
+        <p className="muted">HP/Mana เป็นของสัตว์เลี้ยงและใช้ในการดวลเท่านั้น (ทำบทเรียนไม่เสียพลัง) ไม่มีระบบธาตุ ไม่เสียสัตว์เลี้ยงเมื่อแพ้</p>
+        {pet && (
           <div className="mini-bars">
-            <Bar value={character.hp} max={character.max_hp} kind="hp" />
-            <Bar value={character.mana} max={character.max_mana} kind="mana" />
+            <Bar value={pet.hp} max={pet.max_hp} kind="hp" />
+            <Bar value={pet.mana} max={pet.max_mana} kind="mana" />
           </div>
         )}
-        <p className="muted small">เริ่มดวลด้วยพลังที่เหลืออยู่ — พักที่แคมป์/โรงเตี๊ยม หรือใช้ไอเทมใน 🎒 เพื่อฟื้นฟูก่อนดวล (แพ้แล้ว HP ไม่ต่ำกว่า 25)</p>
+        <p className="muted small">สัตว์เลี้ยงเริ่มดวลด้วยพลังที่เหลืออยู่ — พักที่แคมป์/โรงเตี๊ยม หรือใช้ไอเทมใน 🎒 เพื่อฟื้นฟูก่อนดวล (แพ้แล้ว HP ไม่ต่ำกว่า 25)</p>
         <p>ชนะ {character?.pvp_wins} · แพ้ {character?.pvp_losses}</p>
         <button className="btn big" disabled={busy} onClick={find}>หาคู่ต่อสู้</button>
         <button className="btn ghost" onClick={onExit}>กลับแผนที่</button>

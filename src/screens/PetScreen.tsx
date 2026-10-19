@@ -3,7 +3,7 @@ import { STAGE_NAMES, STAGE_THRESHOLDS } from '../lib/util';
 import { Bar } from '../components/Hud';
 
 export function PetScreen() {
-  const { pet, species, progress, character } = useGame();
+  const { pet, species, progress } = useGame();
   const sp = species.find((s) => s.id === pet?.species_id);
   if (!pet || !sp) return null;
   const cleared = progress.size;
@@ -22,16 +22,16 @@ export function PetScreen() {
       ) : (
         <p className="muted">สัตว์เลี้ยงเติบโตเต็มที่แล้ว 🎉</p>
       )}
-      {character && (
+      {pet && (
         <div className="status-card">
-          <b>สถานะการดวล</b>
-          <Bar value={character.hp} max={character.max_hp} kind="hp" />
-          <Bar value={character.mana} max={character.max_mana} kind="mana" />
+          <b>สถานะการดวลของสัตว์เลี้ยง</b>
+          <Bar value={pet.hp} max={pet.max_hp} kind="hp" />
+          <Bar value={pet.mana} max={pet.max_mana} kind="mana" />
           <div className="stat-row">
             <span>⚔️ โจมตี <b>{10 + 2 * pet.stage}</b></span>
             <span>⚡ ทักษะ <b>{pet.stage >= 2 ? 18 + 3 * pet.stage : '🔒'}</b></span>
           </div>
-          <p className="muted small">HP/Mana ของตัวละครใช้ร่วมกับสัตว์เลี้ยงในการดวล ฟื้นฟูที่แคมป์/โรงเตี๊ยม หรือใช้ไอเทมในกระเป๋า</p>
+          <p className="muted small">HP/Mana เป็นของสัตว์เลี้ยงเท่านั้น ใช้ในการดวล ฟื้นฟูที่แคมป์/โรงเตี๊ยม หรือใช้ไอเทมในกระเป๋า</p>
         </div>
       )}
       <div className="skill">

@@ -65,8 +65,9 @@ select public.travel('u1');
 select pg_temp.expect_err($$ select public.complete_lesson('u1-l1', 2, 3, 0, 0) $$, 'invalid_result');
 select public.complete_lesson('u1-l1', (select count(*)::int from public.activities where lesson_id = 'u1-l1'),
   (select count(*)::int from public.activities where lesson_id = 'u1-l1'), 100, 2);
-select pg_temp.assert((select hp from public.characters) = 100, 'wrong answers do not cost HP');
-select pg_temp.assert((select mana from public.characters) = 40, 'hints do not cost Mana');
+select pg_temp.assert((select hp from public.pets) = 100, 'wrong answers do not cost HP');
+select pg_temp.assert((select mana from public.pets) = 40, 'hints do not cost Mana');
+select pg_temp.assert(not exists (select 1 from information_schema.columns where table_name = 'characters' and column_name in ('hp', 'mana', 'max_hp', 'max_mana')), 'characters have no HP/Mana');
 
 -- project is optional: clearing the 4 required lessons clears u1 and opens u2
 select pg_temp.clear_here();
@@ -81,12 +82,12 @@ select public.travel('u2');
 select pg_temp.clear_here();
 select pg_temp.assert((select stage from public.pets) = 2, 'pet evolved after 6+ lessons');
 reset role;
-update public.characters set hp = 1, mana = 0 where user_id = :'ua';
+update public.pets set hp = 1, mana = 0 where character_id = (select id from public.characters where user_id = :'ua');
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'ua', false);
 select public.travel('campA');
 select pg_temp.assert((select (public.rest() ->> 'hp')::int) = 41, 'camp heals 40');
-select pg_temp.assert((select mana from public.characters) = 15, 'camp restores 15 mana');
+select pg_temp.assert((select mana from public.pets) = 15, 'camp restores 15 mana');
 select pg_temp.expect_err($$ select public.rest() $$, 'already_rested');
 select public.travel('u3');
 select public.travel('campA');
@@ -96,7 +97,7 @@ select pg_temp.expect_err($$ select public.buy_item('apple', 1) $$, 'not_at_inn'
 -- items
 select public.use_item('apple');
 select public.use_item('tea');
-select pg_temp.assert((select hp from public.characters) = 100 and (select mana from public.characters) = 40, 'items restore to full');
+select pg_temp.assert((select hp from public.pets) = 100 and (select mana from public.pets) = 40, 'items restore to full');
 select pg_temp.expect_err($$ select public.use_item('apple') $$, 'already_full');
 select pg_temp.expect_err($$ select public.use_item('sandwich') $$, 'no_item');
 
@@ -128,7 +129,7 @@ select c.id, 'start-l1', 1, 1, 3 from public.characters c where c.user_id = :'ub
 set role authenticated;
 
 reset role;
-update public.characters set hp = 60, mana = 30 where user_id = :'ua';
+update public.pets set hp = 60, mana = 30 where character_id = (select id from public.characters where user_id = :'ua');
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'ua', false);
 create temp table m as select public.pvp_find_match() as id;
@@ -176,8 +177,8 @@ select pg_temp.assert((select status from public.pvp_matches where id = (select 
 select pg_temp.assert((select c.user_id from public.pvp_matches pm join public.characters c on c.id = pm.winner where pm.id = (select id from m)) = :'ua', 'A wins');
 select pg_temp.assert((select pvp_wins from public.characters where user_id = :'ua') = 1 and (select pvp_losses from public.characters where user_id = :'ub') = 1, 'win/loss recorded');
 select pg_temp.assert((select count(*) from public.pvp_secrets) >= 1, 'secrets stay server side');
-select pg_temp.assert((select c.hp = greatest(25, pm.p1_hp) and c.mana = pm.p1_mana from public.pvp_matches pm join public.characters c on c.id = pm.p1 where pm.id = (select id from m)), 'A keeps match HP/Mana');
-select pg_temp.assert((select c.hp = 25 from public.pvp_matches pm join public.characters c on c.id = pm.p2 where pm.id = (select id from m)), 'defeated B is floored at 25 HP');
+select pg_temp.assert((select c.hp = greatest(25, pm.p1_hp) and c.mana = pm.p1_mana from public.pvp_matches pm join public.pets c on c.character_id = pm.p1 where pm.id = (select id from m)), 'A pet keeps match HP/Mana');
+select pg_temp.assert((select c.hp = 25 from public.pvp_matches pm join public.pets c on c.character_id = pm.p2 where pm.id = (select id from m)), 'defeated B pet is floored at 25 HP');
 
 -- finished matches don't block a new search; timeout claim needs an idle opponent
 set role authenticated;

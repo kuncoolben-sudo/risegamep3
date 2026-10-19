@@ -50,10 +50,6 @@ export interface CharacterRow {
   id: string;
   name: string;
   appearance: Appearance;
-  max_hp: number;
-  hp: number;
-  max_mana: number;
-  mana: number;
   coins: number;
   location_id: string;
   rested_here: boolean;
@@ -66,6 +62,10 @@ export interface PetRow {
   species_id: string;
   nickname: string | null;
   stage: number;
+  max_hp: number;
+  hp: number;
+  max_mana: number;
+  mana: number;
 }
 
 export interface PetSpecies {
