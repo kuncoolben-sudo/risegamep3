@@ -31,7 +31,7 @@ begin
 end $$;
 
 -- ===== seed sanity =====
-select pg_temp.assert((select count(*) from public.locations) = 15, '15 locations');
+select pg_temp.assert((select count(*) from public.locations) = 16, '16 locations');
 select pg_temp.assert((select count(*) from public.activities) > 100, 'activities seeded');
 select pg_temp.assert(not exists (select 1 from public.lessons l where l.required and not exists (select 1 from public.activities a where a.lesson_id = l.id)), 'every required lesson has activities');
 
@@ -78,6 +78,24 @@ select pg_temp.assert((select stage from public.pets) = 1, 'pet still stage 1 af
 
 -- rest stops
 select pg_temp.expect_err($$ select public.rest() $$, 'not_a_rest_stop');
+-- the pet hospital next to the arena: open from the start, heals to full for 3 coins
+reset role;
+update public.pets set hp = 10, mana = 0 where character_id = (select id from public.characters where user_id = :'ua');
+create temp table hosp as select coins as c0 from public.characters where user_id = :'ua';
+grant select on hosp to authenticated;
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'ua', false);
+select public.travel('hospital');
+select pg_temp.assert((select (public.rest() ->> 'hp')::int) = 100, 'hospital heals HP to full');
+select pg_temp.assert((select mana from public.pets) = 40, 'hospital restores Mana to full');
+select pg_temp.assert((select coins from public.characters) = (select c0 from hosp) - 3, 'hospital costs 3 coins');
+select pg_temp.expect_err($$ select public.buy_item('apple', 1) $$, 'not_at_inn');
+select public.rest();   -- and again: no once-per-visit limit
+reset role;
+update public.characters set coins = (select c0 from hosp) where user_id = :'ua';
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'ua', false);
+select public.travel('start');
 select public.travel('u2');
 select pg_temp.clear_here();
 select pg_temp.assert((select stage from public.pets) = 2, 'pet evolved after 6+ lessons');

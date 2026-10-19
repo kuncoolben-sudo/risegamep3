@@ -375,6 +375,14 @@ def b_inn(r):  # inn with bed sign
     box('Lantern', 'Gold', (-1.2, -1.45, 1.5), (0.2, 0.2, 0.3), r)
 
 
+def b_hospital(r):  # pet hospital: white house, blue roof, red cross
+    house_body(r, 'White', 'RoofBlue', w=3.8, d=2.8, h=2.0)
+    box('CrossV', 'Red', (0, -1.43, 1.55), (0.28, 0.06, 0.9), r)
+    box('CrossH', 'Red', (0, -1.43, 1.55), (0.9, 0.06, 0.28), r)
+    box('Step', 'Stone', (0, -1.7, 0.06), (1.2, 0.5, 0.12), r)
+    box('Lamp', 'Glass', (-1.2, -1.45, 1.5), (0.2, 0.2, 0.3), r)
+
+
 def b_arena(r):  # duel arena
     cyl('Floor', 'Sand', (0, 0, 0.1), 3.2, 0.2, seg=24, parent=r)
     cyl('Ring', 'Stone', (0, 0, 0.22), 2.2, 0.06, seg=24, parent=r)
@@ -441,7 +449,7 @@ if __name__ == '__main__':
     for k in ('lion', 'penguin', 'monkey', 'parrot'):
         build_pet(k)
     for n, f in (('b_cottage', b_cottage), ('b_school', b_school), ('b_weather', b_weather), ('b_family', b_family), ('b_town', b_town),
-                 ('b_cake', b_cake), ('b_clock', b_clock), ('b_beach', b_beach), ('b_story', b_story), ('b_tent', b_tent), ('b_inn', b_inn),
+                 ('b_cake', b_cake), ('b_clock', b_clock), ('b_beach', b_beach), ('b_story', b_story), ('b_tent', b_tent), ('b_inn', b_inn), ('b_hospital', b_hospital),
                  ('b_arena', b_arena), ('b_festival', b_festival), ('b_sound', b_sound),
                  ('p_tree', b_tree), ('p_pine', b_pine), ('p_rock', b_rock), ('p_flower', b_flower)):
         building(n, f)

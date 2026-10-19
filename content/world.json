@@ -246,6 +246,21 @@
    ],
    "blurb_th": "English sounds หน้า 124–128",
    "content_status": "pending"
+  },
+  {
+   "id": "hospital",
+   "kind": "rest",
+   "name_en": "Pet Hospital",
+   "name_th": "โรงพยาบาลสัตว์เลี้ยง",
+   "icon": "🏥",
+   "pages": null,
+   "x": 220,
+   "y": 400,
+   "requires": [
+    "start"
+   ],
+   "blurb_th": "รักษาสัตว์เลี้ยงให้ HP/Mana เต็ม (3 เหรียญ ถ้าเหรียญไม่พอรักษาฟรี) ใกล้ลานประลอง",
+   "rest_type": "hospital"
   }
  ],
  "paths": [
@@ -307,6 +322,10 @@
   ],
   [
    "arena",
+   "hospital"
+  ],
+  [
+   "hospital",
    "u1"
   ]
  ],
