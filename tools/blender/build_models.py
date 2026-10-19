@@ -61,7 +61,11 @@ def _finish(o, name, material, smooth, parent):
     else:
         bpy.ops.object.shade_flat()
     if parent is not None:
+        # Parts are placed at world coordinates; cancel the parent's own offset so pivot empties
+        # (Head, ArmL, LegL...) don't shift their children a second time.
+        bpy.context.view_layer.update()
         o.parent = parent
+        o.matrix_parent_inverse = parent.matrix_world.inverted()
     return o
 
 
@@ -168,7 +172,9 @@ def build_character():
     bpy.ops.object.transform_apply(scale=True)
     bm = bmesh.new()
     bm.from_mesh(cap.data)
-    kill = [v for v in bm.verts if (v.co.z < 0.14 and v.co.y < 0.12) or v.co.z < -0.1]
+    # transform_apply bakes the location into the vertices, so measure relative to the sphere centre in world space
+    rel = lambda v: ((cap.matrix_world @ v.co).y - 0.02, (cap.matrix_world @ v.co).z - (hz + 0.02))  # noqa: E731
+    kill = [v for v in bm.verts if (rel(v)[1] < 0.14 and rel(v)[0] < 0.12) or rel(v)[1] < -0.1]
     bmesh.ops.delete(bm, geom=kill, context='VERTS')
     bm.to_mesh(cap.data)
     bm.free()
