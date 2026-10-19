@@ -19,7 +19,14 @@
         if (!window.__booted) showBootError('เกมยังไม่เริ่มทำงานใน 6 วินาที (ไฟล์สคริปต์โหลดไม่ได้?)\nลองปิดแท็บแล้วเปิดใหม่ หรือใช้เบราว์เซอร์เวอร์ชันล่าสุด\n' + navigator.userAgent);
       }, 6000);
       // a <script> that fails to load fires 'error' on the element only (capture phase needed)
-      window.addEventListener('error', function (e) { if (e.target && e.target.tagName === 'SCRIPT') showBootError('โหลดไฟล์เกมไม่ได้: ' + e.target.src); }, true);
+      window.addEventListener('error', function (e) {
+        if (!e.target || e.target.tagName !== 'SCRIPT') return;
+        if (/\/src\/main\.tsx$/.test(e.target.src)) {
+          showBootError('หน้านี้เป็นไฟล์ต้นฉบับที่ยังไม่ได้ build (GitHub Pages ไม่ได้ใช้ GitHub Actions)\nไปที่ repo → Settings → Pages → Source เลือก "GitHub Actions" แล้วรัน workflow "Deploy to GitHub Pages"\nจากนั้นเปิดลิงก์: ' + location.origin + location.pathname.replace(/[^\/]*$/, ''));
+        } else {
+          showBootError('โหลดไฟล์เกมไม่ได้: ' + e.target.src);
+        }
+      }, true);
       window.addEventListener('error', function (e) { showBootError(e.message + (e.filename ? '\n' + e.filename + ':' + e.lineno : '')); });
       window.addEventListener('unhandledrejection', function (e) { showBootError(e.reason && e.reason.message || e.reason); });
     </script>
