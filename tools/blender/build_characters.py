@@ -189,17 +189,33 @@ def descendants(o):
         yield from descendants(c)
 
 
-def export_root(root, path):
+def tag_nodes(root, owner):
+    """Blender keeps object names unique per file, so the second character's 'Head' would become 'Head.001',
+    but the game looks nodes up by their plain name ('ArmL', 'Head'...). Keep the plain name in a property and
+    give each object a per-character name; export_root swaps the plain names back for the export."""
+    for o in descendants(root):
+        o['node'] = o.name
+        o.name = f'{owner}|{o.name}'
+
+
+def export_root(root, owner, path):
     loc = root.location.copy()
     root.location = (0, 0, 0)
+    nodes = list(descendants(root))
+    for o in nodes:
+        o.name = o['node']
     bpy.context.view_layer.update()
     bpy.ops.object.select_all(action='DESELECT')
-    for o in descendants(root):
+    for o in nodes:
         o.select_set(True)
     bpy.context.view_layer.objects.active = root
-    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_apply=True,
-                              export_yup=True, export_materials='EXPORT', export_cameras=False, export_lights=False)
-    root.location = loc
+    try:
+        bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_apply=True,
+                                  export_yup=True, export_materials='EXPORT', export_cameras=False, export_lights=False)
+    finally:
+        for o in nodes:
+            o.name = f"{owner}|{o['node']}"
+        root.location = loc
 
 
 def main():
@@ -219,9 +235,10 @@ def main():
             for c in o.users_collection:
                 c.objects.unlink(o)
             coll.objects.link(o)
+        tag_nodes(root, spec['name'])
         root.location = ((i - (len(CHARACTERS) - 1) / 2) * 1.6, 0, 0)
         path = os.path.join(OUT, f"char_{spec['name'].lower()}.glb")
-        export_root(root, path)
+        export_root(root, spec['name'], path)
         print(f"{path}: {os.path.getsize(path) / 1024:.0f} KB")
 
 
