@@ -16,6 +16,7 @@ function Shell() {
   const [view, setView] = useState<View>('world');
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [pvp, setPvp] = useState(false);
+  const [goTo, setGoTo] = useState<string | null>(null);
 
   let body;
   if (phase === 'loading') body = <main className="card center"><p>กำลังโหลด…</p></main>;
@@ -31,7 +32,7 @@ function Shell() {
     if (view === 'world' && !pvp) {
       body = (
         <Suspense fallback={<main className="card center"><p>กำลังสร้างโลก 3D…</p></main>}>
-          <World3D hud={hud(true)} onPlay={play} onPvp={() => setPvp(true)} />
+          <World3D hud={hud(true)} onPlay={play} onPvp={() => setPvp(true)} goTo={goTo} onGoConsumed={() => setGoTo(null)} />
         </Suspense>
       );
     } else {
@@ -41,7 +42,7 @@ function Shell() {
           <main className="stage">
             {pvp ? <PvpScreen onExit={() => setPvp(false)} />
               : view === 'lesson' && lessonId ? <LessonScreen lessonId={lessonId} onExit={leaveLesson} />
-              : view === 'map' ? <MapScreen onPlay={play} onPvp={() => setPvp(true)} />
+              : view === 'map' ? <MapScreen onGo={(id) => { setGoTo(id); setView('world'); }} />
               : view === 'pet' ? <PetScreen />
               : <BagScreen />}
           </main>
