@@ -10,11 +10,13 @@ function pagesLabel(l: LocationRow) {
 }
 
 // What you can do at a location: lessons, rest, shop, arena. Used by both the 2D map and the 3D world.
-export function LocationPanel({ selected, onClose, onPlay, onPvp, empty }: {
+export function LocationPanel({ selected, onClose, onPlay, onPvp, onGo, empty }: {
   selected: LocationRow | null | undefined;
   onClose: () => void;
   onPlay: (lessonId: string) => void;
   onPvp: () => void;
+  /** when set (2D map): show only the place info and a "go" button instead of its lessons */
+  onGo?: (loc: LocationRow) => void;
   empty?: ReactNode;
 }) {
   const { lessons, items, states, character, pet, progress, refresh, say } = useGame();
@@ -46,6 +48,16 @@ export function LocationPanel({ selected, onClose, onPlay, onPvp, empty }: {
     </div>
   );
   if (st === 'locked') return <>{header}<p>🔒 ยังไม่เปิด ต้องผ่าน: {selected.requires.map((r) => byId.get(r)?.name_en).join(', ')}</p></>;
+  if (onGo) {
+    return (
+      <>
+        {header}
+        <p>{selected.blurb_th}</p>
+        <button className="btn big" onClick={() => onGo(selected)}>🚶 ไปเลย</button>
+        <p className="muted small">ตัวละครจะเดินไปที่นั่นในโลก 3D</p>
+      </>
+    );
+  }
   if (here !== selected.id) return <>{header}<p className="muted">กำลังเดินทาง…</p></>;
   if (selected.kind === 'pending')
     return <>{header}<p>{selected.blurb_th}</p><p className="notice">📖 เนื้อหาส่วนนี้ยังรอใส่จากหน้าหนังสือจริง — ภาพสารบัญระบุเฉพาะชื่อและเลขหน้า จึงยังไม่สร้างกิจกรรมขึ้นเอง</p></>;

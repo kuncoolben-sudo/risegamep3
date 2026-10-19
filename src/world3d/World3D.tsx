@@ -9,6 +9,7 @@ import { LocationPanel } from '../components/LocationPanel';
 import type { LocationRow, LocationStatus } from '../lib/types';
 import { modelUrl } from './assets';
 import { Character3D, Pet3D, type Limbs } from './Character3D';
+import { worldSession } from './session';
 import { COLLIDE_RADIUS, LOCATION_MODEL, NEAR_RADIUS, SCENERY_COUNT, WORLD_RADIUS, rng, toWorld } from './config';
 
 interface Input { x: number; z: number }
@@ -186,14 +187,18 @@ function Minimap({ locations, states, pos, quest }: {
   );
 }
 
-function Player({ start, input, pos, locations, onNear }: {
+function Player({ start, input, pos, locations, onNear, dest, onDest }: {
   start: [number, number];
   input: React.MutableRefObject<Input>;
   pos: MutableRefObject<THREE.Vector3>;
   locations: LocationRow[];
   onNear: (id: string | null) => void;
+  dest: string | null;
+  onDest: (id: string | null) => void;
 }) {
   const { character, pet, species } = useGame();
+  const destRef = useRef<string | null>(dest);
+  destRef.current = dest;
   const group = useRef<THREE.Group>(null);
   const petRef = useRef<THREE.Group>(null);
   const limbs = useRef<Limbs>({});
@@ -217,14 +222,28 @@ function Player({ start, input, pos, locations, onNear }: {
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear); };
   }, []);
 
-  useEffect(() => { group.current?.position.set(start[0], 0, start[1]); camera.position.set(start[0], 16, start[1] + 14); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { pos.current.set(start[0], 0, start[1]); group.current?.position.set(start[0], 0, start[1]); camera.position.set(start[0], 16, start[1] + 14); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useFrame((state, dt) => {
     const g = group.current;
     if (!g || !character) return;
     const k = keys.current;
-    const dx = (k.has('d') || k.has('arrowright') ? 1 : 0) - (k.has('a') || k.has('arrowleft') ? 1 : 0) + input.current.x;
-    const dz = (k.has('s') || k.has('arrowdown') ? 1 : 0) - (k.has('w') || k.has('arrowup') ? 1 : 0) + input.current.z;
+    let dx = (k.has('d') || k.has('arrowright') ? 1 : 0) - (k.has('a') || k.has('arrowleft') ? 1 : 0) + input.current.x;
+    let dz = (k.has('s') || k.has('arrowdown') ? 1 : 0) - (k.has('w') || k.has('arrowup') ? 1 : 0) + input.current.z;
+    const manual = Math.hypot(dx, dz) > 0.05;
+    const target = destRef.current ? spots.find((sp) => sp.id === destRef.current) : undefined;
+    let auto = false;
+    if (target && manual) onDest(null); // the player took the controls: cancel the auto-walk
+    else if (target) {
+      // walk to the side of the building facing us, stop when close enough to enter
+      const ex = g.position.x - target.x, ez = g.position.z - target.z, d = Math.hypot(ex, ez) || 1;
+      if (d <= target.r + 1.6) onDest(null);
+      else {
+        const gx = target.x + (ex / d) * (target.r + 1.2) - g.position.x, gz = target.z + (ez / d) * (target.r + 1.2) - g.position.z;
+        const gd = Math.hypot(gx, gz) || 1;
+        dx = gx / gd; dz = gz / gd; auto = true;
+      }
+    }
     const mag = Math.min(1, Math.hypot(dx, dz));
     const moving = mag > 0.05;
     if (moving) {
@@ -243,6 +262,7 @@ function Player({ start, input, pos, locations, onNear }: {
     for (const s of spots) {
       const ex = g.position.x - s.x, ez = g.position.z - s.z;
       const d = Math.hypot(ex, ez);
+      if (auto && s.id !== destRef.current && d < s.r + 0.4) { g.position.x += (-ez / (d || 1)) * 3 * dt; g.position.z += (ex / (d || 1)) * 3 * dt; } // nudge sideways so we slide round it
       if (d < s.r) { g.position.x = s.x + (ex / (d || 1)) * s.r; g.position.z = s.z + (ez / (d || 1)) * s.r; }
       if (d < best) { best = d; near = s.id; }
     }
@@ -327,20 +347,27 @@ function JoystickLayer({ input }: { input: React.MutableRefObject<Input> }) {
   );
 }
 
-export function World3D({ onPlay, onPvp, hud }: { onPlay: (lessonId: string) => void; onPvp: () => void; hud?: ReactNode }) {
+export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
+  onPlay: (lessonId: string) => void; onPvp: () => void; hud?: ReactNode; goTo?: string | null; onGoConsumed?: () => void;
+}) {
   const { locations, paths, states, character } = useGame();
   const { visit, byId, here } = useTravel();
   const input = useRef<Input>({ x: 0, z: 0 });
   const playerPos = useRef(new THREE.Vector3());
   const quest = useQuest();
   const [near, setNear] = useState<string | null>(null);
+  const [dest, setDest] = useState<string | null>(goTo ?? null);
   const [sel, setSel] = useState<string | null>(null);
   const [lowPower, setLowPower] = useState(() => { try { return localStorage.getItem('lowPower') === '1'; } catch { return false; } });
   const start = useMemo<[number, number]>(() => {
+    if (worldSession.characterId === character?.id && worldSession.pos) return worldSession.pos;
     const l = byId.get(here);
     const [x, z] = l ? toWorld(l.x, l.y) : [0, 0];
     return [x, z + 4.2];
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { if (goTo) onGoConsumed?.(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => { worldSession.characterId = character?.id ?? null; worldSession.pos = [playerPos.current.x, playerPos.current.z]; }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onNear = useCallback((id: string | null) => {
     setNear(id);
@@ -387,14 +414,14 @@ export function World3D({ onPlay, onPvp, hud }: { onPlay: (lessonId: string) => 
           })}
           {locations.map((l) => <Building key={l.id} loc={l} status={states[l.id] ?? 'locked'} active={near === l.id} />)}
           <Scenery locations={locations} paths={paths} />
-          {character && <Player start={start} input={input} pos={playerPos} locations={locations} onNear={onNear} />}
+          {character && <Player start={start} input={input} pos={playerPos} locations={locations} onNear={onNear} dest={dest} onDest={setDest} />}
         </Suspense>
       </Canvas>
 
       <JoystickLayer input={input} />
       {hud}
       <Minimap locations={locations} states={states} pos={playerPos} quest={quest?.location ?? null} />
-      <div className="world-hint">{coarse ? 'แตะค้างตรงไหนก็ได้บนจอแล้วลากเพื่อเดิน' : 'ลากเมาส์ค้าง หรือ WASD / ลูกศร · E เพื่อเข้า'}</div>
+      <div className="world-hint">{dest ? `🚶 กำลังเดินไป ${byId.get(dest)?.name_en ?? ''}… (แตะจอเพื่อเดินเอง)` : coarse ? 'แตะค้างตรงไหนก็ได้บนจอแล้วลากเพื่อเดิน' : 'ลากเมาส์ค้าง หรือ WASD / ลูกศร · E เพื่อเข้า'}</div>
       <button className="btn ghost world-low" onClick={toggleLow}>{lowPower ? '⚡ โหมดประหยัด: เปิด' : '⚡ โหมดประหยัด'}</button>
       {nearLoc && !sel && (
         <button className="btn big enter-btn" onClick={enter}>{nearLoc.icon} เข้า {nearLoc.name_en}</button>
