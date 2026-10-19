@@ -46,6 +46,17 @@ npm run build
 2. Settings → Secrets and variables → Actions → เพิ่ม `VITE_SUPABASE_URL` และ `VITE_SUPABASE_ANON_KEY`
 3. Merge เข้า `main` (หรือรัน workflow "Deploy to GitHub Pages" ด้วยมือ) — workflow อยู่ที่ `.github/workflows/deploy.yml` และตั้ง base path เป็น `/<ชื่อ repo>/` ให้เอง
 
+## อัปเดตฐานข้อมูลอัตโนมัติ (Supabase)
+
+workflow **Migrate database (Supabase)** รัน `supabase/migrations/*` (ไฟล์ละครั้ง) และ `supabase/seed.sql` ให้เองทุกครั้งที่ merge เข้า `main` แล้วมีไฟล์ใน `supabase/` เปลี่ยน ไม่ต้องวาง SQL เองอีก
+
+ตั้งค่าครั้งเดียว:
+1. Supabase Dashboard → ปุ่ม **Connect** → แท็บ **Session pooler** → คัดลอก connection string (หน้าตา `postgresql://postgres.<ref>:[YOUR-PASSWORD]@aws-0-<region>.pooler.supabase.com:5432/postgres`) แล้วแทน `[YOUR-PASSWORD]` ด้วยรหัสผ่านฐานข้อมูล (ลืมรหัส: Project Settings → Database → Reset database password) — ต้องใช้ Session pooler ไม่ใช่ Direct เพราะ GitHub Actions เชื่อมต่อ IPv6 ไม่ได้
+2. GitHub repo → Settings → Secrets and variables → Actions → เพิ่ม secret `SUPABASE_DB_URL` เป็น string ข้างบน
+3. แท็บ Actions → **Migrate database (Supabase)** → Run workflow หนึ่งครั้ง (ฐานข้อมูลที่เคยวาง SQL เองจะถูกตรวจจับว่าไฟล์ไหนรันไปแล้ว ไม่รันซ้ำ)
+
+ถ้าไม่ตั้ง secret workflow จะข้ามไปเฉยๆ ทดสอบตัวรัน: `npm run db:test:migrate`
+
 ## เสียงอังกฤษจาก Azure (เด็ก UK, พูดช้า)
 
 เกมเล่นไฟล์ `public/audio/*.mp3` ก่อน (เสียงเหมือนกันทุกเครื่อง) ถ้าไม่มีไฟล์จะใช้เสียงในเครื่องแทน ไฟล์สร้างจาก Azure Speech (เสียง `en-GB-MaisieNeural`, ความเร็ว −25%) สำหรับข้อความทั้งหมดใน `content/units.json` (~240 ข้อความ ~3,500 ตัวอักษร อยู่ในโควต้าฟรีรายเดือนของ Azure)
