@@ -374,6 +374,54 @@
    "icon": "🦜",
    "skill_name": "Rainbow Song",
    "blurb_th": "สัตว์จาก Unit 8"
+  },
+  {
+   "id": "skyra",
+   "name_en": "Skyra",
+   "name_th": "วายุเทพอินทรี",
+   "icon": "🦅",
+   "skill_name": "Thunder Claw",
+   "blurb_th": "อินทรีศักดิ์สิทธิ์ที่มาพร้อมพลังสายฟ้า เร็ว ว่องไว และปกป้องผู้อ่อนแอ"
+  },
+  {
+   "id": "blazion",
+   "name_en": "Blazion",
+   "name_th": "มังกรเพลิง",
+   "icon": "🐉",
+   "skill_name": "Fire Blast",
+   "blurb_th": "มังกรผู้กล้าหาญที่เกิดจากเปลวไฟบริสุทธิ์ มีพลังมหาศาลและจิตใจที่ไม่ยอมแพ้"
+  },
+  {
+   "id": "kirin",
+   "name_en": "Kirin",
+   "name_th": "คีริน",
+   "icon": "🦌",
+   "skill_name": "Poison Leaf",
+   "blurb_th": "สัตว์ในตำนานที่ผสมผสานพลังของธรรมชาติและความแข็งแกร่งของภูเขา"
+  },
+  {
+   "id": "lunara",
+   "name_en": "Lunara",
+   "name_th": "นางฟ้าจันทรา",
+   "icon": "🌙",
+   "skill_name": "Moon Ring",
+   "blurb_th": "นางฟ้าที่มาพร้อมแสงจันทร์อันบริสุทธิ์ เยียวยาจิตใจและมอบพลังใจให้กับทุกคน"
+  },
+  {
+   "id": "aquaria",
+   "name_en": "Aquaria",
+   "name_th": "นางเงือกมังกร",
+   "icon": "🧜",
+   "skill_name": "Holy Stream",
+   "blurb_th": "นางเงือกมังกรผู้ครอบครองพลังแห่งสายน้ำ ช่วยเยียวยาและปกป้องผู้ที่รัก"
+  },
+  {
+   "id": "kitsune",
+   "name_en": "Kitsune",
+   "name_th": "คิทสึเนะ",
+   "icon": "🦊",
+   "skill_name": "Illusion Mist",
+   "blurb_th": "จิ้งจอกเทพที่มีปัญญาและความเมตตา ช่วยนำทางและเปิดประตูสู่ความรู้"
   }
  ]
 }

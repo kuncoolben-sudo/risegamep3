@@ -4,6 +4,8 @@ import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
 import { modelUrl } from './assets';
 import type { Appearance } from '../lib/types';
+import { CompanionPet } from './CompanionPet';
+import { isFantasyPet } from './pets';
 
 export interface Limbs {
   armL?: THREE.Object3D;
@@ -63,9 +65,13 @@ export function Character3D({ look, limbs }: { look: Appearance; limbs?: Mutable
 }
 
 export function Pet3D({ species, stage }: { species: string; stage: number }) {
+  return isFantasyPet(species) ? <CompanionPet species={species} stage={stage} /> : <LegacyPet species={species} stage={stage} />;
+}
+
+function LegacyPet({ species, stage }: { species: string; stage: number }) {
   const gltf = useGLTF(modelUrl(`pet_${species}`));
   const model = useMemo(() => prepare(gltf.scene), [gltf]);
   return <primitive object={model} scale={0.7 + stage * 0.22} />;
 }
 
-for (const f of ['character', 'pet_lion', 'pet_penguin', 'pet_monkey', 'pet_parrot']) useGLTF.preload(modelUrl(f));
+useGLTF.preload(modelUrl('character'));
