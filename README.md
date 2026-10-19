@@ -40,6 +40,12 @@ npm run build
 | กติกาเกม (RPC ฝั่งเซิร์ฟเวอร์) | `supabase/migrations/0002_functions.sql` |
 | ทดสอบฐานข้อมูลบน Postgres ชั่วคราว | `npm run db:test` |
 
+## เผยแพร่บน GitHub Pages
+
+1. Settings → Pages → **Source: GitHub Actions** (ถ้าเลือก "Deploy from a branch" จะขึ้นหน้าว่าง เพราะเสิร์ฟไฟล์ต้นฉบับที่ยังไม่ได้ build)
+2. Settings → Secrets and variables → Actions → เพิ่ม `VITE_SUPABASE_URL` และ `VITE_SUPABASE_ANON_KEY`
+3. Merge เข้า `main` (หรือรัน workflow "Deploy to GitHub Pages" ด้วยมือ) — workflow อยู่ที่ `.github/workflows/deploy.yml` และตั้ง base path เป็น `/<ชื่อ repo>/` ให้เอง
+
 ## โลก 3D
 
 หน้าเริ่มต้นคือโลก 3D (Three.js + React Three Fiber) เดินด้วย WASD / ลูกศร / คลิกพื้น / จอยสติ๊กบนมือถือ เดินเข้าใกล้สถานที่แล้วกด E หรือปุ่ม "เข้า" เพื่อเปิดบทเรียน พักฟื้น หรือเข้าลานประลอง (ใช้ RPC เดิมทั้งหมด) แผนที่ 2D ยังอยู่ในแท็บ "แผนที่ 2D" และมี "โหมดประหยัด" สำหรับเครื่องช้า

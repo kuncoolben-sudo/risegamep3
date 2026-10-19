@@ -6,6 +6,7 @@ import { useGame } from '../state/GameContext';
 import { useTravel } from '../state/useTravel';
 import { LocationPanel } from '../components/LocationPanel';
 import type { LocationRow, LocationStatus } from '../lib/types';
+import { modelUrl } from './assets';
 import { Character3D, Pet3D, type Limbs } from './Character3D';
 import { COLLIDE_RADIUS, LOCATION_MODEL, NEAR_RADIUS, WORLD_RADIUS, rng, toWorld } from './config';
 
@@ -13,7 +14,7 @@ interface Input { x: number; z: number }
 
 function Building({ loc, status, active }: { loc: LocationRow; status: LocationStatus; active: boolean }) {
   const def = LOCATION_MODEL[loc.id] ?? { file: 'b_cottage' };
-  const { scene } = useGLTF(`/models/${def.file}.glb`);
+  const { scene } = useGLTF(modelUrl(def.file));
   const [x, z] = toWorld(loc.x, loc.y);
   const locked = status === 'locked';
   return (
@@ -52,10 +53,10 @@ function Road({ a, b, open }: { a: LocationRow; b: LocationRow; open: boolean })
 }
 
 function Scenery({ locations, paths }: { locations: LocationRow[]; paths: [string, string][] }) {
-  const tree = useGLTF('/models/p_tree.glb').scene;
-  const pine = useGLTF('/models/p_pine.glb').scene;
-  const rock = useGLTF('/models/p_rock.glb').scene;
-  const flower = useGLTF('/models/p_flower.glb').scene;
+  const tree = useGLTF(modelUrl('p_tree')).scene;
+  const pine = useGLTF(modelUrl('p_pine')).scene;
+  const rock = useGLTF(modelUrl('p_rock')).scene;
+  const flower = useGLTF(modelUrl('p_flower')).scene;
   const items = useMemo(() => {
     const r = rng(7);
     const pts = locations.map((l) => toWorld(l.x, l.y));
