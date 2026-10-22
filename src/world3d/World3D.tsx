@@ -12,7 +12,7 @@ import { Character3D, Pet3D, type Limbs } from './Character3D';
 import { worldSession } from './session';
 import { LOCATION_MODEL, NEAR_RADIUS, WORLD_RADIUS, collideRadius, footprint, toWorld } from './config';
 import { IslandWorld, OBSTACLE_SPOTS, Scenery } from './Island';
-import { daylight, phaseAt } from './daylight';
+import { daylight, getDayMode, phaseAt, setDayMode, type DayMode } from './daylight';
 
 // Opening flyover, once per visit: from out at sea, low enough to see the sky, to behind the player.
 const INTRO_FROM = new THREE.Vector3(0, 26, 100);
@@ -444,6 +444,7 @@ export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
   const [near, setNear] = useState<string | null>(null);
   const [dest, setDest] = useState<string | null>(goTo ?? null);
   const [sel, setSel] = useState<string | null>(null);
+  const [dayMode, setMode] = useState<DayMode>(getDayMode);
   const [lowPower, setLowPower] = useState(() => { try { return localStorage.getItem('lowPower') === '1'; } catch { return false; } });
   const start = useMemo<[number, number]>(() => {
     if (worldSession.characterId === character?.id && worldSession.pos) return worldSession.pos;
@@ -483,6 +484,7 @@ export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
     return () => ro.disconnect();
   }, []);
 
+  const cycleDayMode = () => { const next: DayMode = dayMode === 'auto' ? 'day' : dayMode === 'day' ? 'night' : 'auto'; setDayMode(next); setMode(next); };
   const toggleLow = () => setLowPower((v) => { try { localStorage.setItem('lowPower', v ? '0' : '1'); } catch { /* ignore */ } return !v; });
   const nearLoc = near ? byId.get(near) : undefined;
   const coarse = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
@@ -509,6 +511,7 @@ export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
       {hud}
       <Minimap locations={locations} states={states} pos={playerPos} quest={quest?.location ?? null} />
       <div className="world-hint">{dest ? `🚶 กำลังเดินไป ${byId.get(dest)?.name_en ?? ''}… (แตะจอเพื่อเดินเอง)` : coarse ? 'แตะค้างแล้วลากเพื่อเดิน · ใช้สองนิ้วถ่างหรือหุบเพื่อซูม' : 'ลากเมาส์ค้าง หรือ WASD / ลูกศร · E เพื่อเข้า · หมุนลูกกลิ้งเพื่อซูม'}</div>
+      <button className="btn ghost world-time" onClick={cycleDayMode} title="สลับ อัตโนมัติ / กลางวัน / กลางคืน">{dayMode === 'auto' ? '🕒 เวลา: อัตโนมัติ' : dayMode === 'day' ? '☀️ กลางวัน' : '🌙 กลางคืน'}</button>
       <button className="btn ghost world-low" onClick={toggleLow}>{lowPower ? '⚡ โหมดประหยัด: เปิด' : '⚡ โหมดประหยัด'}</button>
       {nearLoc && !sel && (
         <button className="btn big enter-btn" onClick={enter}>{nearLoc.icon} เข้า {nearLoc.name_en}</button>

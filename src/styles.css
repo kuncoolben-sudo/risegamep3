@@ -181,3 +181,6 @@ input:focus, textarea:focus { outline: 3px solid rgba(255,179,0,.45); border-col
 .news-item.evolve { background: #e9f8f4; border-color: var(--teal); color: #0d5c53; }
 @keyframes news-in { from { opacity: 0; transform: translateY(-8px) scale(.95); } }
 @keyframes news-out { to { opacity: 0; transform: translateY(6px); } }
+
+/* day / night / auto switch above the low-power button */
+.world-time { position: absolute; right: 12px; bottom: 52px; z-index: 6; padding: 4px 10px; font-size: .8rem; }
