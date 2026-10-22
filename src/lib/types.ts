@@ -114,6 +114,15 @@ export interface LessonResult {
   item_drop: string | null;
 }
 
+/** A line of the public news feed (see supabase/migrations/0010_announcements.sql). */
+export interface Announcement {
+  id: number;
+  kind: 'lesson' | 'evolve';
+  char_name: string;
+  detail: { title?: string; stars?: number; species_id?: string; stage?: number };
+  created_at: string;
+}
+
 /** A fighter at the start of a duel (see _pvp_fighter in supabase/migrations/0005_auto_duel.sql). */
 export interface DuelStats {
   stars: number; atk: number; spd: number; def: number;
