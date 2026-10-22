@@ -19,6 +19,26 @@ const INTRO_FROM = new THREE.Vector3(0, 26, 100);
 const INTRO_LOOK = new THREE.Vector3(0, 2, -8);
 const INTRO_HOLD = 1.0, INTRO_MOVE = 3.2; // seconds
 
+// Zoom = the camera's distance from the point above the player it looks at. Zooming in also tilts the camera down
+// behind the player (the places side-on, the mountains on the skyline), but not so low that trees get in the way;
+// zooming out raises it towards a map.
+const ZOOM = { min: 10, normal: 20.5, max: 38 };
+
+/** Height above, and distance behind, the look-at point for a zoom: 26° up close, 47° normally, 60° far out. */
+function orbit(d: number): [number, number] {
+  const deg = d <= ZOOM.normal ? 26 + 21 * (d - ZOOM.min) / (ZOOM.normal - ZOOM.min) : 47 + 13 * (d - ZOOM.normal) / (ZOOM.max - ZOOM.normal);
+  const a = THREE.MathUtils.degToRad(deg);
+  return [d * Math.sin(a), d * Math.cos(a)];
+}
+
+function savedZoom() {
+  let z = worldSession.zoom;
+  if (z === null) {
+    try { z = Number(localStorage.getItem('worldZoom')) || null; } catch { z = null; }
+  }
+  return THREE.MathUtils.clamp(z ?? ZOOM.normal, ZOOM.min, ZOOM.max);
+}
+
 interface Input { x: number; z: number }
 
 function Building({ loc, status, active }: { loc: LocationRow; status: LocationStatus; active: boolean }) {
@@ -163,9 +183,10 @@ function Minimap({ locations, states, pos, quest }: {
   );
 }
 
-function Player({ start, input, pos, locations, onNear, dest, onDest }: {
+function Player({ start, input, zoom, pos, locations, onNear, dest, onDest }: {
   start: [number, number];
   input: React.MutableRefObject<Input>;
+  zoom: MutableRefObject<number>;
   pos: MutableRefObject<THREE.Vector3>;
   locations: LocationRow[];
   onNear: (id: string | null) => void;
@@ -191,6 +212,7 @@ function Player({ start, input, pos, locations, onNear, dest, onDest }: {
     ...OBSTACLE_SPOTS.map((o) => ({ id: null, ...o, reach: 0 })), // mountains, the lake…: walked round, never entered
   ], [locations]);
   const intro = useRef(worldSession.introDone || dest ? -1 : 0); // seconds into the opening flyover, -1 once it is over
+  const introZoom = useRef(zoom.current); // zooming during the flyover also cuts it short
 
   useEffect(() => {
     const typing = () => ['INPUT', 'TEXTAREA'].includes((document.activeElement?.tagName ?? ''));
@@ -210,7 +232,10 @@ function Player({ start, input, pos, locations, onNear, dest, onDest }: {
       worldSession.introDone = true;
       camera.position.copy(INTRO_FROM);
       camera.lookAt(INTRO_LOOK);
-    } else camera.position.set(start[0], 16, start[1] + 14);
+    } else {
+      const [up, back] = orbit(zoom.current);
+      camera.position.set(start[0], 1 + up, start[1] + back);
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useFrame((state, dt) => {
@@ -278,9 +303,10 @@ function Player({ start, input, pos, locations, onNear, dest, onDest }: {
       if (mv.length() > 0.002) p.rotation.y = Math.atan2(mv.x, mv.z);
       p.position.y = mv.length() > 0.004 ? Math.abs(Math.sin(t * 0.9)) * 0.1 : 0;
     }
-    // camera follows, after the opening flyover (which any move of the player cuts short)
-    const camGoal = new THREE.Vector3(g.position.x, 16, g.position.z + 14);
-    if (intro.current >= 0 && (manual || destRef.current)) intro.current = -1;
+    // camera follows at the chosen zoom, after the opening flyover (which moving or zooming cuts short)
+    const [up, back] = orbit(zoom.current);
+    const camGoal = new THREE.Vector3(g.position.x, 1 + up, g.position.z + back);
+    if (intro.current >= 0 && (manual || destRef.current || zoom.current !== introZoom.current)) intro.current = -1;
     if (intro.current >= 0) {
       intro.current += dt;
       const u = Math.min(1, Math.max(0, (intro.current - INTRO_HOLD) / INTRO_MOVE)), e = u * u * (3 - 2 * u);
@@ -302,29 +328,72 @@ function Player({ start, input, pos, locations, onNear, dest, onDest }: {
   );
 }
 
-// Floating joystick: press anywhere on the world, drag to move, release to stop.
-function JoystickLayer({ input }: { input: React.MutableRefObject<Input> }) {
+// Floating joystick: press anywhere on the world, drag to move, release to stop. A second finger turns the touch into
+// a pinch that zooms; on a computer the mouse wheel (or a touchpad pinch, sent as wheel events) zooms.
+function JoystickLayer({ input, zoom, setZoom }: {
+  input: React.MutableRefObject<Input>; zoom: MutableRefObject<number>; setZoom: (d: number) => void;
+}) {
   const RADIUS = 56;
   const [ui, setUi] = useState<{ ox: number; oy: number; kx: number; ky: number } | null>(null);
+  const layer = useRef<HTMLDivElement>(null);
   const pointer = useRef<number | null>(null);
   const origin = useRef({ x: 0, y: 0 });
+  const down = useRef(new Map<number, { x: number; y: number }>()); // every pointer pressed on the layer
+  const pinch = useRef<{ spread: number; zoom: number } | null>(null);
   const local = (e: React.PointerEvent) => {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
+  const spread = () => {
+    const [a, b] = [...down.current.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y) || 1;
+  };
   const stop = () => { pointer.current = null; input.current = { x: 0, z: 0 }; setUi(null); };
+  const lift = (id: number) => {
+    down.current.delete(id);
+    if (pinch.current && down.current.size < 2) pinch.current = null; // a finger left after a pinch steers nothing until lifted
+    if (id === pointer.current) stop();
+  };
+  useEffect(() => {
+    const el = layer.current;
+    if (!el) return;
+    const wheel = (e: WheelEvent) => {
+      e.preventDefault(); // no page scroll, and no browser zoom on a touchpad pinch
+      setZoom(zoom.current * Math.exp((e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY) * 0.0012));
+    };
+    const gesture = (e: Event) => e.preventDefault(); // Safari's own pinch-to-zoom of the page
+    el.addEventListener('wheel', wheel, { passive: false });
+    el.addEventListener('gesturestart', gesture);
+    el.addEventListener('gesturechange', gesture);
+    return () => {
+      el.removeEventListener('wheel', wheel);
+      el.removeEventListener('gesturestart', gesture);
+      el.removeEventListener('gesturechange', gesture);
+    };
+  }, [zoom, setZoom]);
   return (
-    <div className="joy-layer"
+    <div className="joy-layer" ref={layer}
       onPointerDown={(e) => {
-        if (pointer.current !== null) return;
-        pointer.current = e.pointerId;
-        e.currentTarget.setPointerCapture(e.pointerId);
-        origin.current = local(e);
-        setUi({ ox: origin.current.x, oy: origin.current.y, kx: 0, ky: 0 });
+        down.current.set(e.pointerId, local(e));
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* the pointer is already gone */ }
+        if (down.current.size === 2) { // two fingers: stop walking and pinch instead
+          stop();
+          pinch.current = { spread: spread(), zoom: zoom.current };
+        } else if (down.current.size === 1 && pointer.current === null) {
+          pointer.current = e.pointerId;
+          origin.current = local(e);
+          setUi({ ox: origin.current.x, oy: origin.current.y, kx: 0, ky: 0 });
+        }
       }}
       onPointerMove={(e) => {
-        if (e.pointerId !== pointer.current) return;
+        if (!down.current.has(e.pointerId)) return;
         const p = local(e);
+        down.current.set(e.pointerId, p);
+        if (pinch.current) {
+          if (down.current.size >= 2) setZoom(pinch.current.zoom * pinch.current.spread / spread()); // fingers apart = closer
+          return;
+        }
+        if (e.pointerId !== pointer.current) return;
         let dx = p.x - origin.current.x, dy = p.y - origin.current.y;
         const m = Math.hypot(dx, dy);
         if (m > RADIUS) { dx *= RADIUS / m; dy *= RADIUS / m; }
@@ -332,9 +401,9 @@ function JoystickLayer({ input }: { input: React.MutableRefObject<Input> }) {
         input.current = Math.hypot(nx, ny) < 0.12 ? { x: 0, z: 0 } : { x: nx, z: ny };
         setUi({ ox: origin.current.x, oy: origin.current.y, kx: dx, ky: dy });
       }}
-      onPointerUp={(e) => { if (e.pointerId === pointer.current) stop(); }}
-      onPointerCancel={(e) => { if (e.pointerId === pointer.current) stop(); }}
-      onLostPointerCapture={stop}
+      onPointerUp={(e) => lift(e.pointerId)}
+      onPointerCancel={(e) => lift(e.pointerId)}
+      onLostPointerCapture={(e) => lift(e.pointerId)}
     >
       {ui && (
         <div className="joy" style={{ left: ui.ox - 60, top: ui.oy - 60 }}>
@@ -351,6 +420,14 @@ export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
   const { locations, paths, states, character } = useGame();
   const { visit, byId, here } = useTravel();
   const input = useRef<Input>({ x: 0, z: 0 });
+  const zoom = useRef(savedZoom());
+  const saveZoom = useRef(0);
+  const setZoom = useCallback((d: number) => {
+    zoom.current = THREE.MathUtils.clamp(d, ZOOM.min, ZOOM.max);
+    worldSession.zoom = zoom.current;
+    window.clearTimeout(saveZoom.current);
+    saveZoom.current = window.setTimeout(() => { try { localStorage.setItem('worldZoom', zoom.current.toFixed(2)); } catch { /* ignore */ } }, 400);
+  }, []);
   const playerPos = useRef(new THREE.Vector3());
   const quest = useQuest();
   const [near, setNear] = useState<string | null>(null);
@@ -403,14 +480,14 @@ export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
           })}
           {locations.map((l) => <Building key={l.id} loc={l} status={states[l.id] ?? 'locked'} active={near === l.id} />)}
           <Scenery locations={locations} paths={paths} />
-          {character && <Player start={start} input={input} pos={playerPos} locations={locations} onNear={onNear} dest={dest} onDest={setDest} />}
+          {character && <Player start={start} input={input} zoom={zoom} pos={playerPos} locations={locations} onNear={onNear} dest={dest} onDest={setDest} />}
         </Suspense>
       </Canvas>
 
-      <JoystickLayer input={input} />
+      <JoystickLayer input={input} zoom={zoom} setZoom={setZoom} />
       {hud}
       <Minimap locations={locations} states={states} pos={playerPos} quest={quest?.location ?? null} />
-      <div className="world-hint">{dest ? `🚶 กำลังเดินไป ${byId.get(dest)?.name_en ?? ''}… (แตะจอเพื่อเดินเอง)` : coarse ? 'แตะค้างตรงไหนก็ได้บนจอแล้วลากเพื่อเดิน' : 'ลากเมาส์ค้าง หรือ WASD / ลูกศร · E เพื่อเข้า'}</div>
+      <div className="world-hint">{dest ? `🚶 กำลังเดินไป ${byId.get(dest)?.name_en ?? ''}… (แตะจอเพื่อเดินเอง)` : coarse ? 'แตะค้างแล้วลากเพื่อเดิน · ใช้สองนิ้วถ่างหรือหุบเพื่อซูม' : 'ลากเมาส์ค้าง หรือ WASD / ลูกศร · E เพื่อเข้า · หมุนลูกกลิ้งเพื่อซูม'}</div>
       <button className="btn ghost world-low" onClick={toggleLow}>{lowPower ? '⚡ โหมดประหยัด: เปิด' : '⚡ โหมดประหยัด'}</button>
       {nearLoc && !sel && (
         <button className="btn big enter-btn" onClick={enter}>{nearLoc.icon} เข้า {nearLoc.name_en}</button>
