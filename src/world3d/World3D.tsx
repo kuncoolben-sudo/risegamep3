@@ -186,7 +186,7 @@ function Minimap({ locations, states, pos, quest }: {
       </div>
       {quest && (
         <div className="quest-arrow" ref={arrow}>
-          <b className="arrow-icon">▲</b>
+          <svg className="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L21 12 H15 V22 H9 V12 H3 Z" fill="currentColor" stroke="#4a2c17" strokeWidth="1.5" strokeLinejoin="round" /></svg>
           <span><small>{quest.name_en}</small><br /><span ref={dist} /></span>
         </div>
       )}
