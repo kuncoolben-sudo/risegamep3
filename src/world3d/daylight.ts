@@ -3,7 +3,8 @@ import * as THREE from 'three';
 // The sky and the light follow the clock of the player's device: morning, day, sunset and night, with a smooth change
 // between them. Each look gives the sky dome's colours (by height above the horizon; the fog and the far sea take the
 // horizon's), the clouds' tint, the sea, the sun (or moon) as a light, the ambient and sky light, and which of the sun,
-// moon and stars show. Add ?time=morning|day|sunset|night to the address to see one whatever the clock says.
+// moon and stars show. Add ?time=morning|day|sunset|night to the address to see one whatever the clock says. The button in the world picks
+// auto (the clock), always day or always night.
 
 export type DayPhase = 'morning' | 'day' | 'sunset' | 'night';
 
@@ -51,9 +52,26 @@ export const LOOKS: Record<DayPhase, Look> = {
   },
 };
 
+/** The player's choice: follow the device clock, or keep it day or night. Remembered on this device. */
+export type DayMode = 'auto' | 'day' | 'night';
+
+export function getDayMode(): DayMode {
+  try {
+    const v = localStorage.getItem('dayMode');
+    return v === 'day' || v === 'night' ? v : 'auto';
+  } catch { return 'auto'; }
+}
+
+export function setDayMode(mode: DayMode) {
+  try { localStorage.setItem('dayMode', mode); } catch { /* ignore */ }
+  daylight.go(phaseAt()); // blends over a few seconds
+}
+
 export function phaseAt(d = new Date()): DayPhase {
   const force = new URLSearchParams(window.location.search).get('time');
   if (force && force in LOOKS) return force as DayPhase;
+  const mode = getDayMode();
+  if (mode !== 'auto') return mode;
   const h = d.getHours() + d.getMinutes() / 60;
   return h >= 5 && h < 9 ? 'morning' : h >= 9 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'sunset' : 'night';
 }
