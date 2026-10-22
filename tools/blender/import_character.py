@@ -1,35 +1,55 @@
 """Turn a dense, textured character model (e.g. from an AI 3D generator: ~1M loose triangles, 4k textures, no skeleton)
 into a game character: public/models/char_<preset>.glb.
 
-    blender -b --python tools/blender/import_character.py -- <source.glb> <output.glb>
+    blender -b --python tools/blender/import_character.py -- <preset> [source.glb]
+
+The source defaults to characters/<preset>.glb (not in git: the originals are ~80 MB each).
 
 1. Weld the loose triangles into one surface and decimate a copy to ~24k triangles.
 2. Unwrap the copy afresh and bake the original's colours onto it (2048 px). Decimating the original's own UVs smears
    its texture across its many seams, which shows as cracked, speckled patches.
 3. Stand it up on z = 0, 1.9 m tall like the other characters, front towards -Y (the game camera).
-4. Add the skeleton the game swings while walking (src/world3d/World3D.tsx `swing`): Body, Spine, Head, ArmL/ArmR,
-   LegL/LegR, each limb's x axis sideways, with weights from where each vertex sits, blended across the joints.
+4. Add the skeleton the game swings while walking (src/world3d/World3D.tsx `swing`): Body, Spine, Head, LegL/LegR and
+   ArmL/ArmR for arms that hang free, each limb's x axis sideways, with weights from where each vertex sits, blended
+   across the joints. An arm posed holding something (a strap, a book, waving) gets no bone and stays still.
 
-The joint heights in RIG fit Kai's proportions (big head, short legs: hips 0.48, shoulders 1.0, hands 0.55); check them
-against a new model (slice it by height) before using this for another character.
+Joints in CHARACTERS were read off a front render of each model at game size (1.9 m, centred on its bounding box);
+measure a new model the same way before adding it.
 """
+import os
 import sys
 
 import bpy
 from mathutils import Vector
 
-SRC, OUT = sys.argv[sys.argv.index('--') + 1:][:2]
+ARGS = sys.argv[sys.argv.index('--') + 1:]
+PRESET = ARGS[0]
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SRC = ARGS[1] if len(ARGS) > 1 else os.path.join(ROOT, 'characters', PRESET + '.glb')
+OUT = os.path.join(ROOT, 'public', 'models', f'char_{PRESET}.glb')
 TRIS, SIZE, HEIGHT = 24000, 2048, 1.9
-CX = -0.03  # Kai's middle, between the legs (after centring)
+
+# cx: middle between the legs (cx_foot: between the feet, if a wide stance moves it); hip: top of the legs; legs: x of each knee / foot; arms: side -> (shoulder, hand) as (x, z),
+# with 'in' the |x| where the arm starts (keeps belts and pouches off it) and 'top' how high its weights reach
+CHARACTERS = {
+    'kai': dict(cx=-0.03, hip=0.48, legs=(-0.18, 0.12), arms={'L': ((-0.30, 1.0), (-0.39, 0.55)), 'R': ((0.26, 1.0), (0.35, 0.55))}),
+    'pond': dict(cx=-0.03, hip=0.48, legs=(-0.16, 0.13), arms={'L': ((-0.27, 1.02), (-0.37, 0.5))}, arm_in=0.27, arm_low=0.4),
+    'beam': dict(cx=0.0, hip=0.47, legs=(-0.18, 0.18), arms={'R': ((0.22, 1.04), (0.28, 0.62))}, arm_in=0.23),
+    'lily': dict(cx=-0.03, hip=0.58, legs=(-0.14, 0.1), arms={'L': ((-0.2, 1.1), (-0.33, 0.66))}, arm_top=0.98),
+    'minnie': dict(cx=-0.05, hip=0.55, legs=(-0.18, 0.1), arms={}),
+    'maya': dict(cx=0.0, cx_foot=-0.08, hip=0.55, legs=(-0.13, 0.12), arms={}),
+}
+C = CHARACTERS[PRESET]
+CX, HIP = C['cx'], C['hip']
 RIG = {  # name: head, tail, parent
-    'Body': ((CX, 0, 0.48), (CX, 0, 0.75), None),
+    'Body': ((CX, 0, HIP), (CX, 0, 0.75), None),
     'Spine': ((CX, 0, 0.75), (CX, 0, 1.1), 'Body'),
     'Head': ((CX, 0, 1.1), (CX, 0, 1.85), 'Spine'),
-    'ArmL': ((CX - 0.27, 0, 1.0), (CX - 0.36, -0.02, 0.55), 'Spine'),
-    'ArmR': ((CX + 0.29, 0, 1.0), (CX + 0.38, -0.02, 0.55), 'Spine'),
-    'LegL': ((CX - 0.15, 0, 0.48), (CX - 0.16, -0.03, 0.05), 'Body'),
-    'LegR': ((CX + 0.15, 0, 0.48), (CX + 0.16, -0.03, 0.05), 'Body'),
+    'LegL': ((C['legs'][0], 0, HIP), (C['legs'][0], -0.03, 0.05), 'Body'),
+    'LegR': ((C['legs'][1], 0, HIP), (C['legs'][1], -0.03, 0.05), 'Body'),
 }
+for side, ((sx, sz), (hx, hz)) in C['arms'].items():
+    RIG['Arm' + side] = ((sx, 0, sz), (hx, -0.02, hz), 'Spine')
 
 
 def smooth(e0, e1, x):
@@ -117,7 +137,7 @@ def rig(ob):
         b.head, b.tail = Vector(h), Vector(t)
         if par:
             b.parent = data.edit_bones[par]
-    for name in ('ArmL', 'ArmR', 'LegL', 'LegR'):  # the game swings limbs about their own x axis: make it sideways
+    for name in [n for n in RIG if n[:3] in ('Arm', 'Leg')]:  # the game swings limbs about their own x axis: make it sideways
         b = data.edit_bones[name]
         b.roll = max((r * 0.0174533 for r in range(0, 360, 5)), key=lambda r: (setattr(b, 'roll', r), b.x_axis.x)[1])
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -126,12 +146,14 @@ def rig(ob):
     for v in ob.data.vertices:
         x, z = v.co.x - CX, v.co.z
         w = {}
-        side = 'L' if x < 0 else 'R'
-        leg = smooth(0.56, 0.42, z)  # thighs blend into the hips
+        split = (C.get('cx_foot', CX) - CX) * (1 - smooth(0.05, 0.4, z))
+        side = 'L' if x < split else 'R'
+        leg = smooth(HIP + 0.08, HIP - 0.06, z)  # thighs blend into the hips
         if leg > 0:
             w['Leg' + side] = leg
-        arm_w = smooth(0.21, 0.29, abs(x)) * smooth(0.42, 0.5, z) * smooth(1.1, 0.98, z)
-        if arm_w > 0:
+        a_in, low, top = C.get('arm_in', 0.21), C.get('arm_low', 0.42), C.get('arm_top', 1.1)
+        arm_w = smooth(a_in, a_in + 0.08, abs(x)) * smooth(low, low + 0.08, z) * smooth(top, top - 0.12, z)
+        if arm_w > 0 and 'Arm' + side in RIG:
             w['Arm' + side] = arm_w
         head = smooth(1.06, 1.18, z)
         if head > 0:

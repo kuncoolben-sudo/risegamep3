@@ -5,3 +5,5 @@ dist
 supabase/.temp
 supabase/.branches
 __pycache__/
+# source character models (~80 MB each), see README
+characters/
