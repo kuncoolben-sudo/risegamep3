@@ -10,7 +10,7 @@ import type { LocationRow, LocationStatus } from '../lib/types';
 import { modelUrl } from './assets';
 import { Character3D, Pet3D, type Limbs } from './Character3D';
 import { worldSession } from './session';
-import { COLLIDE_RADIUS, LOCATION_MODEL, NEAR_RADIUS, SCENERY_COUNT, WORLD_RADIUS, rng, toWorld } from './config';
+import { LOCATION_MODEL, NEAR_RADIUS, SCENERY_COUNT, WORLD_RADIUS, collideRadius, footprint, rng, toWorld } from './config';
 
 interface Input { x: number; z: number }
 
@@ -19,22 +19,30 @@ function Building({ loc, status, active }: { loc: LocationRow; status: LocationS
   const { scene } = useGLTF(modelUrl(def.file));
   const [x, z] = toWorld(loc.x, loc.y);
   const locked = status === 'locked';
+  const fp = footprint(loc.id); // landmark dioramas: ring, lock dome and label follow the model's size
+  const labelY = def.labelY ? def.labelY * (def.scale ?? 1) + 0.3 : 4.6;
+  const lockMat = <meshStandardMaterial color="#cfd6e2" transparent opacity={0.55} depthWrite={false} />;
   return (
     <group position={[x, 0, z]}>
       <group scale={def.scale ?? 1}><Clone object={scene} castShadow receiveShadow /></group>
-      {locked && (
+      {locked && (fp ? (
+        <mesh scale={[1, (labelY - 0.5) / (fp + 0.2), 1]}>
+          <sphereGeometry args={[fp + 0.2, 28, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          {lockMat}
+        </mesh>
+      ) : (
         <mesh position={[0, 1.6, 0]}>
           <sphereGeometry args={[3, 20, 14]} />
-          <meshStandardMaterial color="#cfd6e2" transparent opacity={0.55} depthWrite={false} />
+          {lockMat}
         </mesh>
-      )}
+      ))}
       {(status === 'open' || active) && !locked && (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
-          <ringGeometry args={[3.6, 4.0, 40]} />
+          <ringGeometry args={fp ? [fp + 0.15, fp + 0.55, 56] : [3.6, 4.0, 40]} />
           <meshBasicMaterial color={active ? '#ffcf40' : '#ffffff'} transparent opacity={active ? 0.95 : 0.55} />
         </mesh>
       )}
-      <Html center position={[0, 4.6, 0]} distanceFactor={16} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
+      <Html center position={[0, labelY, 0]} distanceFactor={16} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
         <div className={`label3d ${status}`}>{locked ? '🔒 ' : status === 'cleared' ? '✅ ' : ''}{loc.name_en}</div>
       </Html>
     </group>
@@ -95,7 +103,7 @@ function Scenery({ locations, paths }: { locations: LocationRow[]; paths: [strin
   };
   const groups = useMemo(() => {
     const r = rng(7);
-    const pts = locations.map((l) => toWorld(l.x, l.y));
+    const pts = locations.map((l) => [...toWorld(l.x, l.y), Math.max(5.2, (footprint(l.id) ?? 0) + 2.0)] as const);
     const byId = new Map(locations.map((l) => [l.id, l]));
     const segs = paths.map(([a, b]) => [toWorld(byId.get(a)!.x, byId.get(a)!.y), toWorld(byId.get(b)!.x, byId.get(b)!.y)] as const);
     const segDist = (px: number, pz: number, [[ax, az], [bx, bz]]: readonly [readonly number[], readonly number[]]) => {
@@ -108,7 +116,7 @@ function Scenery({ locations, paths }: { locations: LocationRow[]; paths: [strin
     while (n < SCENERY_COUNT && tries++ < 6000) {
       const ang = r() * Math.PI * 2, rad = Math.sqrt(r()) * (WORLD_RADIUS - 1);
       const x = Math.cos(ang) * rad, z = Math.sin(ang) * rad;
-      if (pts.some(([px, pz]) => Math.hypot(px - x, pz - z) < 5.2)) continue;
+      if (pts.some(([px, pz, clear]) => Math.hypot(px - x, pz - z) < clear)) continue;
       if (segs.some((s) => segDist(x, z, s) < 2.0)) continue;
       const k = r();
       const kind: SceneryKind = k < 0.4 ? 'tree' : k < 0.65 ? 'pine' : k < 0.8 ? 'rock' : 'flower';
@@ -208,7 +216,8 @@ function Player({ start, input, pos, locations, onNear, dest, onDest }: {
   const { camera } = useThree();
   const spots = useMemo(() => locations.map((l) => {
     const [x, z] = toWorld(l.x, l.y);
-    return { id: l.id, x, z, r: COLLIDE_RADIUS[LOCATION_MODEL[l.id]?.file] ?? COLLIDE_RADIUS[l.id] ?? 2.6 };
+    const r = collideRadius(l.id);
+    return { id: l.id, x, z, r, reach: Math.max(NEAR_RADIUS, r + 1.7) }; // reach: close enough to enter (past where auto-walk stops)
   }), [locations]);
 
   useEffect(() => {
@@ -258,13 +267,13 @@ function Player({ start, input, pos, locations, onNear, dest, onDest }: {
     // keep on the island and out of buildings
     const rad = Math.hypot(g.position.x, g.position.z);
     if (rad > WORLD_RADIUS) { g.position.x *= WORLD_RADIUS / rad; g.position.z *= WORLD_RADIUS / rad; }
-    let near: string | null = null, best = NEAR_RADIUS;
+    let near: string | null = null, best = Infinity;
     for (const s of spots) {
       const ex = g.position.x - s.x, ez = g.position.z - s.z;
       const d = Math.hypot(ex, ez);
       if (auto && s.id !== destRef.current && d < s.r + 0.4) { g.position.x += (-ez / (d || 1)) * 3 * dt; g.position.z += (ex / (d || 1)) * 3 * dt; } // nudge sideways so we slide round it
       if (d < s.r) { g.position.x = s.x + (ex / (d || 1)) * s.r; g.position.z = s.z + (ez / (d || 1)) * s.r; }
-      if (d < best) { best = d; near = s.id; }
+      if (d < s.reach && d < best) { best = d; near = s.id; }
     }
     if (near !== lastNear.current) { lastNear.current = near; onNear(near); }
     pos.current.copy(g.position);
@@ -363,7 +372,7 @@ export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
     if (worldSession.characterId === character?.id && worldSession.pos) return worldSession.pos;
     const l = byId.get(here);
     const [x, z] = l ? toWorld(l.x, l.y) : [0, 0];
-    return [x, z + 4.2];
+    return [x, z + Math.max(4.2, (l ? collideRadius(l.id) : 0) + 1.0)];
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (goTo) onGoConsumed?.(); }, []); // eslint-disable-line react-hooks/exhaustive-deps

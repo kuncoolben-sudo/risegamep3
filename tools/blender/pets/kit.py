@@ -8,6 +8,7 @@ Conventions as everywhere in tools/blender: Z up, pets face -Y (+Z in glTF), fee
 All lengths given to the primitives are multiplied by the pet's scale, angles are in degrees.
 """
 import math
+import random
 
 import bpy
 import bmesh
@@ -203,6 +204,74 @@ class Pet:
         for i in range(len(vs) - 1):
             bm.faces.new((h, vs[i], vs[i + 1]))
 
+    def poly(self, p, m, verts, faces, solid=False, smooth=False):
+        """Raw mesh: verts are (x, y, z) points, faces are tuples of vertex indices (counter-clockwise seen from outside).
+        solid=True recomputes the normals of a closed shape so the winding does not matter."""
+        k = self.k
+        bm = self._bm(p, m)
+        vs = [bm.verts.new(V(v) * k) for v in verts]
+        made = []
+        for f in faces:
+            try:
+                made.append(bm.faces.new([vs[i] for i in f]))
+            except ValueError:  # degenerate or duplicate face
+                pass
+        for f in made:
+            f.smooth = smooth
+        if solid:
+            bmesh.ops.recalc_face_normals(bm, faces=made)
+
+    def lathe(self, p, m, profile, c=(0, 0, 0), seg=12, rot=0.0, smooth=False, caps=True):
+        """Surface of revolution round the vertical axis through c. profile = [(radius, z), ...] from the bottom up
+        (z relative to c); a radius of 0 makes a point; repeat a z with another radius for a step."""
+        k = self.k
+        c = V(c) * k
+        bm = self._bm(p, m)
+        rings = []
+        for r, z in profile:
+            if r <= 1e-4:
+                rings.append([bm.verts.new(c + V((0, 0, z * k)))])
+            else:
+                rings.append([bm.verts.new(c + V((math.cos(math.radians(rot) + 2 * math.pi * j / seg) * r * k,
+                                                  math.sin(math.radians(rot) + 2 * math.pi * j / seg) * r * k, z * k)))
+                              for j in range(seg)])
+        faces = []
+        for a, b in zip(rings, rings[1:]):
+            if len(a) == 1 and len(b) == 1:
+                continue
+            for j in range(seg):
+                j2 = (j + 1) % seg
+                try:
+                    if len(a) == 1:
+                        faces.append(bm.faces.new((a[0], b[j2], b[j])))
+                    elif len(b) == 1:
+                        faces.append(bm.faces.new((a[j], a[j2], b[0])))
+                    else:
+                        faces.append(bm.faces.new((a[j], a[j2], b[j2], b[j])))
+                except ValueError:
+                    pass
+        if caps:
+            if len(rings[0]) > 1:
+                faces.append(bm.faces.new(rings[0][::-1]))
+            if len(rings[-1]) > 1:
+                faces.append(bm.faces.new(rings[-1]))
+        for f in faces:
+            f.smooth = smooth
+
+    def blob(self, p, m, c, r, s=(1, 1, 1), jitter=0.15, seed=1, seg=9, rings=6, flat_bottom=False, rot=(0, 0, 0)):
+        """Lumpy low-poly rock/bush: a sphere whose vertices are pushed about by up to `jitter` (seeded), flat shaded."""
+        k = self.k
+        rnd = random.Random(seed)
+        mat = Matrix.Translation(V(c) * k) @ _euler(rot) @ Matrix.Diagonal((r * s[0] * k, r * s[1] * k, r * s[2] * k, 1.0))
+        res = bmesh.ops.create_uvsphere(self._bm(p, m), u_segments=seg, v_segments=rings, radius=1.0, matrix=mat)
+        zmin = min(v.co.z for v in res['verts'])
+        for v in res['verts']:
+            v.co += V((rnd.uniform(-1, 1), rnd.uniform(-1, 1), rnd.uniform(-1, 1))) * (jitter * r * k * max(s))
+            if flat_bottom and v.co.z < zmin + 0.35 * r * s[2] * k:
+                v.co.z = zmin + 0.35 * r * s[2] * k
+        for f in {f for v in res['verts'] for f in v.link_faces}:
+            f.smooth = False
+
     def torus(self, p, m, c, R, r, rot=(0, 0, 0), seg=18, minor=6):
         k = self.k
         mat = Matrix.Translation(V(c) * k) @ _euler(rot)
@@ -321,7 +390,8 @@ class Pet:
             track.strips.new(clip, int(keys[0][0]), act)
             ob.animation_data.action = None
 
-    def export(self, path):
+    def export(self, path, draco=False):
+        """Write the model as a GLB; draco=True compresses the meshes (the game decodes them with public/draco/)."""
         nodes = list(self.objs)
         for o in nodes:
             o.name = o['node']
@@ -339,7 +409,8 @@ class Pet:
         try:
             bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_apply=True,
                                       export_yup=True, export_materials='EXPORT', export_cameras=False, export_lights=False,
-                                      export_texcoords=False, export_animations=True, export_animation_mode='NLA_TRACKS')
+                                      export_texcoords=False, export_animations=True, export_animation_mode='NLA_TRACKS',
+                                      export_draco_mesh_compression_enable=draco)
         finally:
             for o in nodes:
                 o.name = f"{self.key}|{o['node']}"
