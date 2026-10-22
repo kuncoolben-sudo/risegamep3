@@ -44,7 +44,7 @@ function Framing({ stage }: { stage: 1 | 2 | 3 }) {
 export default function PetViewer3D({ species, stage, castKey = 0, height = 320 }: { species: string; stage: number; castKey?: number; height?: number }) {
   const st = clampStage(stage);
   return (
-    <div style={{ width: '100%', height, borderRadius: 16, overflow: 'hidden', background: 'radial-gradient(circle at 50% 40%, #3b6aa6, #1b3a63)' }}>
+    <div style={{ width: '100%', height, borderRadius: 16, overflow: 'hidden', background: 'radial-gradient(circle at 50% 40%, #8f6cb8, #48306e 62%, #2e1f47)' }}>
       <Canvas dpr={[1, 1.75]} camera={{ fov: 34, near: 0.1, far: 60 }}>
         <ambientLight intensity={1.15} />
         <hemisphereLight args={['#bcd8ff', '#3a3050', 0.6]} />
