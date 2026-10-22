@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Clone, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -10,7 +10,13 @@ import type { LocationRow, LocationStatus } from '../lib/types';
 import { modelUrl } from './assets';
 import { Character3D, Pet3D, type Limbs } from './Character3D';
 import { worldSession } from './session';
-import { LOCATION_MODEL, NEAR_RADIUS, SCENERY_COUNT, WORLD_RADIUS, collideRadius, footprint, rng, toWorld } from './config';
+import { LOCATION_MODEL, NEAR_RADIUS, WORLD_RADIUS, collideRadius, footprint, toWorld } from './config';
+import { IslandWorld, OBSTACLE_SPOTS, Scenery } from './Island';
+
+// Opening flyover, once per visit: from out at sea, low enough to see the sky, to behind the player.
+const INTRO_FROM = new THREE.Vector3(0, 26, 100);
+const INTRO_LOOK = new THREE.Vector3(0, 2, -8);
+const INTRO_HOLD = 1.0, INTRO_MOVE = 3.2; // seconds
 
 interface Input { x: number; z: number }
 
@@ -60,73 +66,6 @@ function Road({ a, b, open }: { a: LocationRow; b: LocationRow; open: boolean })
       <meshStandardMaterial color={open ? '#e8cf94' : '#bccba3'} />
     </mesh>
   );
-}
-
-type SceneryKind = 'tree' | 'pine' | 'rock' | 'flower';
-interface Scatter { x: number; z: number; s: number; ry: number }
-
-// One InstancedMesh per mesh of the model: hundreds of props cost a handful of draw calls.
-function Instanced({ scene, items }: { scene: THREE.Object3D; items: Scatter[] }) {
-  const parts = useMemo(() => {
-    scene.updateWorldMatrix(true, true);
-    const out: { geo: THREE.BufferGeometry; mat: THREE.Material; local: THREE.Matrix4 }[] = [];
-    scene.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.isMesh) out.push({ geo: m.geometry, mat: m.material as THREE.Material, local: m.matrixWorld.clone() });
-    });
-    return out;
-  }, [scene]);
-  const refs = useRef<(THREE.InstancedMesh | null)[]>([]);
-  useLayoutEffect(() => {
-    const P = new THREE.Matrix4(), M = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), pos = new THREE.Vector3(), sc = new THREE.Vector3();
-    parts.forEach((part, pi) => {
-      const im = refs.current[pi];
-      if (!im) return;
-      items.forEach((it, i) => {
-        q.setFromEuler(e.set(0, it.ry, 0));
-        P.compose(pos.set(it.x, 0, it.z), q, sc.setScalar(it.s));
-        im.setMatrixAt(i, M.multiplyMatrices(P, part.local));
-      });
-      im.instanceMatrix.needsUpdate = true;
-    });
-  }, [parts, items]);
-  if (items.length === 0) return null;
-  return <>{parts.map((p, i) => <instancedMesh key={i} ref={(el) => { refs.current[i] = el; }} args={[p.geo, p.mat, items.length]} castShadow frustumCulled={false} />)}</>;
-}
-
-function Scenery({ locations, paths }: { locations: LocationRow[]; paths: [string, string][] }) {
-  const scenes: Record<SceneryKind, THREE.Object3D> = {
-    tree: useGLTF(modelUrl('p_tree')).scene,
-    pine: useGLTF(modelUrl('p_pine')).scene,
-    rock: useGLTF(modelUrl('p_rock')).scene,
-    flower: useGLTF(modelUrl('p_flower')).scene,
-  };
-  const groups = useMemo(() => {
-    const r = rng(7);
-    const pts = locations.map((l) => [...toWorld(l.x, l.y), Math.max(5.2, (footprint(l.id) ?? 0) + 2.0)] as const);
-    const byId = new Map(locations.map((l) => [l.id, l]));
-    const segs = paths.map(([a, b]) => [toWorld(byId.get(a)!.x, byId.get(a)!.y), toWorld(byId.get(b)!.x, byId.get(b)!.y)] as const);
-    const segDist = (px: number, pz: number, [[ax, az], [bx, bz]]: readonly [readonly number[], readonly number[]]) => {
-      const dx = bx - ax, dz = bz - az;
-      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / (dx * dx + dz * dz)));
-      return Math.hypot(px - (ax + t * dx), pz - (az + t * dz));
-    };
-    const out: Record<SceneryKind, Scatter[]> = { tree: [], pine: [], rock: [], flower: [] };
-    let n = 0, tries = 0;
-    while (n < SCENERY_COUNT && tries++ < 6000) {
-      const ang = r() * Math.PI * 2, rad = Math.sqrt(r()) * (WORLD_RADIUS - 1);
-      const x = Math.cos(ang) * rad, z = Math.sin(ang) * rad;
-      if (pts.some(([px, pz, clear]) => Math.hypot(px - x, pz - z) < clear)) continue;
-      if (segs.some((s) => segDist(x, z, s) < 2.0)) continue;
-      const k = r();
-      const kind: SceneryKind = k < 0.4 ? 'tree' : k < 0.65 ? 'pine' : k < 0.8 ? 'rock' : 'flower';
-      const s = 0.8 + r() * 0.6;
-      out[kind].push({ x, z, s: kind === 'flower' ? s * 1.4 : s, ry: r() * 6.28 });
-      n++;
-    }
-    return out;
-  }, [locations, paths]);
-  return <>{(Object.keys(groups) as SceneryKind[]).map((k) => <Instanced key={k} scene={scenes[k]} items={groups[k]} />)}</>;
 }
 
 // The sun follows the player so shadows stay sharp wherever you walk in the larger world.
@@ -214,11 +153,15 @@ function Player({ start, input, pos, locations, onNear, dest, onDest }: {
   const lastNear = useRef<string | null>(null);
   const yaw = useRef(0);
   const { camera } = useThree();
-  const spots = useMemo(() => locations.map((l) => {
-    const [x, z] = toWorld(l.x, l.y);
-    const r = collideRadius(l.id);
-    return { id: l.id, x, z, r, reach: Math.max(NEAR_RADIUS, r + 1.7) }; // reach: close enough to enter (past where auto-walk stops)
-  }), [locations]);
+  const spots = useMemo(() => [
+    ...locations.map((l) => {
+      const [x, z] = toWorld(l.x, l.y);
+      const r = collideRadius(l.id);
+      return { id: l.id as string | null, x, z, r, reach: Math.max(NEAR_RADIUS, r + 1.7) }; // reach: close enough to enter (past where auto-walk stops)
+    }),
+    ...OBSTACLE_SPOTS.map((o) => ({ id: null, ...o, reach: 0 })), // mountains, the lake…: walked round, never entered
+  ], [locations]);
+  const intro = useRef(worldSession.introDone || dest ? -1 : 0); // seconds into the opening flyover, -1 once it is over
 
   useEffect(() => {
     const typing = () => ['INPUT', 'TEXTAREA'].includes((document.activeElement?.tagName ?? ''));
@@ -231,7 +174,15 @@ function Player({ start, input, pos, locations, onNear, dest, onDest }: {
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear); };
   }, []);
 
-  useEffect(() => { pos.current.set(start[0], 0, start[1]); group.current?.position.set(start[0], 0, start[1]); camera.position.set(start[0], 16, start[1] + 14); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    pos.current.set(start[0], 0, start[1]);
+    group.current?.position.set(start[0], 0, start[1]);
+    if (intro.current === 0) {
+      worldSession.introDone = true;
+      camera.position.copy(INTRO_FROM);
+      camera.lookAt(INTRO_LOOK);
+    } else camera.position.set(start[0], 16, start[1] + 14);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useFrame((state, dt) => {
     const g = group.current;
@@ -298,10 +249,19 @@ function Player({ start, input, pos, locations, onNear, dest, onDest }: {
       if (mv.length() > 0.002) p.rotation.y = Math.atan2(mv.x, mv.z);
       p.position.y = mv.length() > 0.004 ? Math.abs(Math.sin(t * 0.9)) * 0.1 : 0;
     }
-    // camera follows
+    // camera follows, after the opening flyover (which any move of the player cuts short)
     const camGoal = new THREE.Vector3(g.position.x, 16, g.position.z + 14);
-    camera.position.lerp(camGoal, Math.min(1, dt * 3));
-    camera.lookAt(g.position.x, 1, g.position.z);
+    if (intro.current >= 0 && (manual || destRef.current)) intro.current = -1;
+    if (intro.current >= 0) {
+      intro.current += dt;
+      const u = Math.min(1, Math.max(0, (intro.current - INTRO_HOLD) / INTRO_MOVE)), e = u * u * (3 - 2 * u);
+      camera.position.lerpVectors(INTRO_FROM, camGoal, e);
+      camera.lookAt(INTRO_LOOK.x + (g.position.x - INTRO_LOOK.x) * e, INTRO_LOOK.y + (1 - INTRO_LOOK.y) * e, INTRO_LOOK.z + (g.position.z - INTRO_LOOK.z) * e);
+      if (u >= 1) intro.current = -1;
+    } else {
+      camera.position.lerp(camGoal, Math.min(1, dt * 3));
+      camera.lookAt(g.position.x, 1, g.position.z);
+    }
   });
 
   const sp = species.find((s) => s.id === pet?.species_id);
@@ -402,21 +362,14 @@ export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
 
   return (
     <div className="world">
-      <Canvas shadows={!lowPower} dpr={lowPower ? 1 : [1, 1.75]} camera={{ fov: 42, near: 0.1, far: 150 }} gl={{ antialias: !lowPower }}>
-        <color attach="background" args={['#9fd8ff']} />
-        <fog attach="fog" args={['#bfe6ff', 50, 115]} />
+      <Canvas shadows={!lowPower} dpr={lowPower ? 1 : [1, 1.75]} camera={{ fov: 42, near: 0.3, far: 1200 }} gl={{ antialias: !lowPower }}>
+        <color attach="background" args={['#bfe6ff']} />
+        <fog attach="fog" args={['#cdeeff', 160, 620]} />
         <ambientLight intensity={1.15} />
         <hemisphereLight args={['#dff3ff', '#8bc26a', 0.6]} />
         <SunLight target={playerPos} shadows={!lowPower} />
         <Suspense fallback={null}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.25, 0]}>
-            <circleGeometry args={[170, 48]} />
-            <meshStandardMaterial color="#58b7ff" />
-          </mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-            <circleGeometry args={[WORLD_RADIUS + 1.5, 64]} />
-            <meshStandardMaterial color="#86cf62" />
-          </mesh>
+          <IslandWorld shadows={!lowPower} />
           {paths.map(([a, b]) => {
             const A = byId.get(a), B = byId.get(b);
             return A && B ? <Road key={a + b} a={A} b={B} open={states[a] !== 'locked' && states[b] !== 'locked'} /> : null;

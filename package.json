@@ -14,6 +14,7 @@
     "characters:build": "python3 tools/blender/build_characters.py",
     "pets:build": "python3 tools/blender/build_pets.py",
     "places:build": "python3 tools/blender/build_places.py",
+    "world:build": "python3 tools/blender/build_world.py",
     "audio:build": "node scripts/build-audio.mjs",
     "db:migrate": "bash scripts/migrate.sh",
     "db:test:migrate": "bash scripts/test-migrate.sh"
