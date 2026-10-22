@@ -31,6 +31,17 @@ function orbit(d: number): [number, number] {
   return [d * Math.sin(a), d * Math.cos(a)];
 }
 
+const QX = new THREE.Quaternion(), AX = new THREE.Vector3(1, 0, 0);
+
+/** Swing a limb about its own x axis from its rest pose: works for the built models' pivots and for skeleton bones. */
+function swing(o: THREE.Object3D | undefined, to: number) {
+  if (!o) return;
+  const u = o.userData as { rest?: THREE.Quaternion; swing?: number };
+  if (!u.rest) { u.rest = o.quaternion.clone(); u.swing = 0; }
+  u.swing = THREE.MathUtils.lerp(u.swing ?? 0, to, 0.4);
+  o.quaternion.copy(u.rest).multiply(QX.setFromAxisAngle(AX, u.swing));
+}
+
 function savedZoom() {
   let z = worldSession.zoom;
   if (z === null) {
@@ -287,10 +298,10 @@ function Player({ start, input, zoom, pos, locations, onNear, dest, onDest }: {
     const t = state.clock.elapsedTime * 11;
     const sw = moving ? Math.sin(t) * 0.8 * mag : 0;
     const L = limbs.current;
-    if (L.armL) L.armL.rotation.x = THREE.MathUtils.lerp(L.armL.rotation.x, sw, 0.4);
-    if (L.armR) L.armR.rotation.x = THREE.MathUtils.lerp(L.armR.rotation.x, -sw, 0.4);
-    if (L.legL) L.legL.rotation.x = THREE.MathUtils.lerp(L.legL.rotation.x, -sw, 0.4);
-    if (L.legR) L.legR.rotation.x = THREE.MathUtils.lerp(L.legR.rotation.x, sw, 0.4);
+    swing(L.armL, sw);
+    swing(L.armR, -sw);
+    swing(L.legL, -sw);
+    swing(L.legR, sw);
     g.position.y = moving ? Math.abs(Math.sin(t)) * 0.08 : 0;
     // pet trails behind
     const p = petRef.current;
