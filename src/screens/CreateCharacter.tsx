@@ -40,7 +40,7 @@ export function CreateCharacter() {
           <Suspense fallback={<Avatar look={look} size={150} />}>
             <CharacterPreview3D look={look} />
           </Suspense>
-          <p className="pet-preview">{pet ? species.find((s) => s.id === pet)?.icon : '❔'}</p>
+          {pet && <p className="pet-preview">{species.find((s) => s.id === pet)?.icon}</p>}
         </div>
         <div className="fields">
           <div>ตัวละครต้นแบบ
