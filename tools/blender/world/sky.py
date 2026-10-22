@@ -1,6 +1,7 @@
-"""The sky: a dome shaded from deep blue overhead to a pale haze at the horizon, a ring of flat cartoon clouds and the sun,
-all vertex-coloured. The game draws it unlit round the camera (radius 1 here, scaled up there): the dome first, then the
-clouds and the sun over it."""
+"""The sky: a dome shaded from deep blue overhead to a pale haze at the horizon, a ring of flat cartoon clouds, the sun,
+the moon and stars, all vertex-coloured. The game draws it unlit round the camera (radius 1 here, scaled up there): the
+dome first, then the rest over it. These are the daytime colours; src/world3d/daylight.ts recolours the dome, tints the
+clouds, moves the sun and fades the moon and stars in and out with the time of day."""
 import math
 import random
 
@@ -12,7 +13,8 @@ from .layout import _lin, hexc, mix
 
 STOPS = [(-1.0, '#7cc0ea'), (-0.03, '#c4ebff'), (0.0, '#cdeeff'), (0.04, '#a9ddff'), (0.12, '#82c8fa'), (0.3, '#5cb1f2'),
          (0.6, '#4a9fea'), (1.0, '#3a8ee2')]  # elevation (sine) -> colour; the game's fog matches the horizon
-SUN = Vector((14.0, -10.0, 24.0)).normalized()  # where the game's sunlight comes from (three.js (14, 24, 10))
+SUN = Vector((14.0, -10.0, 24.0)).normalized()  # where the game's daytime sunlight comes from (three.js (14, 24, 10))
+MOON = Vector((-0.3, 0.78, 0.55)).normalized()  # high over the far side of the island (three.js (-0.3, 0.55, -0.78))
 CLOUD = [(0.0, '#c8d7ec'), (0.45, '#eef5fd'), (1.0, '#ffffff')]  # bottom to top
 
 
@@ -128,5 +130,38 @@ def sun(coll):
     return paint.mesh('Sun', coll)
 
 
+def disc(c, u, v, r, n=28):
+    return [c + (u * math.cos(2 * math.pi * k / n) + v * math.sin(2 * math.pi * k / n)) * r for k in range(n)]
+
+
+def moon(coll):
+    """A pale moon with a soft glow (its rim takes the night sky's colour in the game) and three shallow craters."""
+    paint = Painter()
+    u, v = frame(MOON)
+    c = MOON * 0.95
+    paint.fan(c, disc(c, u, v, 0.1), hexc('#c9d6ff'), [ramp(STOPS, MOON.z)] * 28)
+    paint.fan(c, disc(c, u, v, 0.036), hexc('#fffbe8'), [hexc('#f2edd8')] * 28)
+    for ox, oy, r in ((0.011, 0.008, 0.007), (-0.012, -0.004, 0.005), (0.004, -0.014, 0.004)):
+        cc = c + u * ox + v * oy
+        paint.fan(cc, disc(cc, u, v, r, 12), hexc('#e2dac0'), [hexc('#e9e2ca')] * 12)
+    return paint.mesh('Moon', coll)
+
+
+def stars(coll):
+    """Tiny four-pointed stars over the upper sky, a little denser away from the horizon."""
+    paint = Painter()
+    rnd = random.Random(8)
+    for _ in range(420):
+        z = rnd.uniform(0.06, 1.0)
+        a = rnd.uniform(0, 2 * math.pi)
+        n = Vector((math.sqrt(1 - z * z) * math.cos(a), math.sqrt(1 - z * z) * math.sin(a), z))
+        u, v = frame(n)
+        s = rnd.uniform(0.0022, 0.005)
+        col = hexc(rnd.choice(('#ffffff', '#ffffff', '#fff6d8', '#dfe8ff')))
+        c = n * 0.97
+        paint.fan(c, [c + u * s, c + v * s, c - u * s, c - v * s], col, [col] * 4)
+    return paint.mesh('Stars', coll)
+
+
 def build(coll):
-    return [dome(coll), clouds(coll), sun(coll)]
+    return [dome(coll), clouds(coll), sun(coll), moon(coll), stars(coll)]

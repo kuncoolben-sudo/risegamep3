@@ -1,26 +1,75 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { LocationRow } from '../lib/types';
 import { modelUrl } from './assets';
 import { SCENERY_COUNT, WORLD_RADIUS, footprint, rng, toWorld } from './config';
+import { daylight, type Look } from './daylight';
 import { DECOR, GRASS_RADIUS, OBSTACLES, SEA_LEVEL } from './terrainData';
 
 // The island under the map, built by tools/blender/build_world.py: the ground and what stands on it, the sea round it,
 // the sky, and the trees, flowers and rocks scattered over it. The ground is flat wherever the places and roads are.
+// The sky and the sea take their colours from the time of day (daylight.ts).
 
-/** Sky models drawn unlit and behind everything: the dome first, then the clouds and the sun. */
+const SUN0 = new THREE.Vector3(14, 24, 10).normalize(); // where w_sky.glb has its sun (tools/blender/world/sky.py)
+const MOON0 = new THREE.Vector3(-0.3, 0.55, -0.78).normalize(); // and its moon
+const FADES: Record<string, (l: Look) => number> = { Sun: (l) => l.sunOn, Moon: (l) => l.moonOn, Stars: (l) => l.starsOn };
+
+/** Sky models drawn unlit and behind everything: the dome first, then the clouds, sun, moon and stars over it. */
 function skyCopy(scene: THREE.Object3D) {
   const sky = scene.clone();
   sky.traverse((o) => {
     const m = o as THREE.Mesh;
     if (!m.isMesh) return;
-    m.material = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, fog: false, depthWrite: false });
+    m.material = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, fog: false, depthWrite: false, transparent: m.name in FADES });
     m.renderOrder = m.name === 'SkyDome' ? -2 : -1;
     m.frustumCulled = false;
   });
   return sky;
+}
+
+const C = new THREE.Color(), P = new THREE.Vector3(), Q = new THREE.Vector3(), D = new THREE.Vector3();
+
+/** Give a copy of the sky the current time of day: dome colours, cloud tint, where the sun is, what fades in. */
+function paintSky(sky: THREE.Object3D) {
+  daylight.sunDir(D);
+  sky.traverse((o) => {
+    const m = o as THREE.Mesh;
+    const pos = m.isMesh ? m.geometry.getAttribute('position') : null, col = m.isMesh ? m.geometry.getAttribute('color') : null;
+    if (!pos || !col) return;
+    const mat = m.material as THREE.MeshBasicMaterial;
+    if (m.name in FADES) {
+      mat.opacity = daylight.num(FADES[m.name]);
+      m.visible = mat.opacity > 0.01;
+    }
+    if (m.name === 'SkyDome') {
+      for (let i = 0; i < pos.count; i++) {
+        daylight.sky(pos.getY(i), C);
+        col.setXYZ(i, C.r, C.g, C.b);
+      }
+    } else if (m.name === 'Clouds') {
+      daylight.color((l) => l.clouds, mat.color);
+      return;
+    } else if (m.name === 'Sun' && m.visible) {
+      m.quaternion.setFromUnitVectors(SUN0, D);
+      Q.copy(SUN0).multiplyScalar(0.95); // the disc's centre
+      for (let i = 0; i < pos.count; i++) { // core, rim, and the glow's edge melting into the sky round it
+        const d = P.fromBufferAttribute(pos, i).distanceTo(Q);
+        if (d > 0.1) daylight.sky(P.applyQuaternion(m.quaternion).y, C);
+        else daylight.color((l) => l.sun[d > 0.03 ? 1 : 0], C);
+        col.setXYZ(i, C.r, C.g, C.b);
+      }
+    } else if (m.name === 'Moon' && m.visible) {
+      Q.copy(MOON0).multiplyScalar(0.95);
+      for (let i = 0; i < pos.count; i++) { // only the glow's edge, which melts into the sky
+        if (P.fromBufferAttribute(pos, i).distanceTo(Q) < 0.08) continue;
+        daylight.sky(P.y, C);
+        col.setXYZ(i, C.r, C.g, C.b);
+      }
+    } else return;
+    col.needsUpdate = true;
+  });
 }
 
 /** The sky round the camera (it moves with it, so it is always the same distance away). */
@@ -29,32 +78,42 @@ export function Sky({ radius }: { radius: number }) {
   const camera = useThree((s) => s.camera);
   const group = useRef<THREE.Group>(null);
   const sky = useMemo(() => skyCopy(scene), [scene]);
-  useFrame(() => { group.current?.position.copy(camera.position); });
+  const painted = useRef(0);
+  useFrame(() => {
+    group.current?.position.copy(camera.position);
+    if (painted.current !== daylight.version) {
+      painted.current = daylight.version;
+      paintSky(sky);
+    }
+  });
   return <group ref={group} scale={radius}><primitive object={sky} /></group>;
 }
 
-/** The sky rendered once into a small cube map, for the water to reflect. */
-function useSkyReflection() {
+/** One water material for the sea, the lake and the river (clear enough to see the sandy shallows through). It reflects
+ *  the sky from a small cube map that is drawn again whenever the time of day changes. */
+export function useWater() {
   const { scene } = useGLTF(modelUrl('w_sky'));
   const gl = useThree((s) => s.gl);
-  const [tex, setTex] = useState<THREE.Texture | null>(null);
-  useEffect(() => {
+  const env = useMemo(() => {
     const target = new THREE.WebGLCubeRenderTarget(128);
-    const env = new THREE.Scene();
-    env.add(skyCopy(scene));
-    new THREE.CubeCamera(0.05, 10, target).update(gl, env);
-    setTex(target.texture);
-    return () => target.dispose();
-  }, [scene, gl]);
-  return tex;
-}
-
-/** One water material for the sea, the lake and the river: clear enough to see the sandy shallows through. */
-export function useWater() {
-  const env = useSkyReflection();
-  return useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#26b0e3', transparent: true, opacity: 0.62, roughness: 0.18, metalness: 0.3, envMap: env, envMapIntensity: 1.1, depthWrite: false,
+    const room = new THREE.Scene();
+    const sky = skyCopy(scene);
+    room.add(sky);
+    return { target, room, sky, camera: new THREE.CubeCamera(0.05, 10, target) };
+  }, [scene]);
+  useEffect(() => () => env.target.dispose(), [env]);
+  const water = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#26b0e3', transparent: true, opacity: 0.62, roughness: 0.18, metalness: 0.3, envMap: env.target.texture, envMapIntensity: 1.1, depthWrite: false,
   }), [env]);
+  const painted = useRef(0);
+  useFrame(() => {
+    if (painted.current === daylight.version) return;
+    painted.current = daylight.version;
+    paintSky(env.sky);
+    env.camera.update(gl, env.room);
+    daylight.color((l) => l.sea, water.color);
+  });
+  return water;
 }
 
 export function Sea({ water }: { water: THREE.Material }) {
