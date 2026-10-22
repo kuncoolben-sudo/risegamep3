@@ -82,7 +82,7 @@ export default function DuelArena3D({ left, right, cue, loser, height = 340 }: {
   }, [cue?.key]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (loser) refs[loser].current?.faint(); }, [loser]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div style={{ width: '100%', height, borderRadius: 16, overflow: 'hidden', background: 'radial-gradient(circle at 50% 35%, #4a79b5, #1b3a63)' }}>
+    <div style={{ width: '100%', height, borderRadius: 16, overflow: 'hidden', background: 'radial-gradient(circle at 50% 35%, #8f6cb8, #48306e 62%, #2e1f47)' }}>
       <Canvas dpr={[1, 1.75]} camera={{ fov: 34, near: 0.1, far: 80 }}>
         <ambientLight intensity={1.15} />
         <hemisphereLight args={['#bcd8ff', '#3a3050', 0.6]} />
