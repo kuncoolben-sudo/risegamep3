@@ -19,7 +19,7 @@ export function Hud({ view, go, overlay }: { view: View; go: (v: View) => void; 
   return (
     <header className={`hud${overlay ? ' overlay' : ''}`}>
       <div className="hud-who">
-        <Avatar look={character.appearance} size={40} />
+        <Avatar look={character.appearance} size={48} />
         <div>
           <b>{character.name}</b> <span title="สัตว์เลี้ยง">{icon}</span>
           <div className="coins">🪙 {character.coins}</div>

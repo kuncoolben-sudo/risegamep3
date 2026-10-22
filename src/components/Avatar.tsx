@@ -11,6 +11,10 @@ export const PRESET_LOOKS: Record<CharacterPreset, { name: string; tagline: stri
 };
 
 export function Avatar({ look, size = 96 }: { look: Appearance; size?: number }) {
+  // preset characters show a portrait of their 3D model (tools/blender/render_avatars.py)
+  if (look.preset) {
+    return <img className="avatar-photo" src={`${import.meta.env.BASE_URL}avatars/${look.preset}.png`} width={size} height={size} alt={PRESET_LOOKS[look.preset]?.name ?? 'avatar'} />;
+  }
   const { skin, hairLength, hairType, hairColor, facial, outfit } = look;
   const long = hairLength === 'long';
   // hair "edge" decoration along the outline: smooth, scalloped (wavy) or bumpy (curly)
