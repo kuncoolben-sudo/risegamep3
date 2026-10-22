@@ -73,7 +73,7 @@ input:focus, textarea:focus { outline: 3px solid rgba(255,179,0,.45); border-col
 .pet-card { display: grid; gap: 2px; justify-items: center; padding: 12px 8px; border: 3px solid #ecd3a2; background: #fffaf0; color: var(--ink); border-radius: 16px; }
 .pet-card.on { border-color: #ff9f1c; background: #fff0d4; box-shadow: 0 0 0 3px rgba(255,159,28,.25); } .pet-icon { font-size: 3rem; }
 .pet-hero { position: relative; line-height: 1.1; } .sparkle { position: absolute; font-size: 40px; top: 0; right: 28%; }
-.skill { background: var(--bg); border-radius: 14px; padding: 8px 14px; margin-top: 10px; }
+.skill { background: var(--bg); border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; margin-top: 10px; box-shadow: 0 3px 0 #e6c48d; text-align: left; }
 
 /* lesson */
 .lesson-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -142,7 +142,7 @@ input:focus, textarea:focus { outline: 3px solid rgba(255,179,0,.45); border-col
 .world-panel { z-index: 7; top: calc(var(--hud-bottom, 84px) + 10px); max-height: calc(100% - var(--hud-bottom, 84px) - 68px); }
 @media (max-width: 800px) { .world-hint { max-width: calc(100% - 170px); border-radius: 14px; } }
 
-.status-card { background: var(--bg); border-radius: 14px; padding: 10px 14px; margin-top: 10px; display: grid; gap: 6px; text-align: left; }
+.status-card { background: var(--bg); border: 2px solid var(--line); box-shadow: 0 3px 0 #e6c48d; border-radius: 14px; padding: 10px 14px; margin-top: 10px; display: grid; gap: 6px; text-align: left; }
 .stat-row { display: flex; gap: 6px 16px; flex-wrap: wrap; justify-content: space-around; font-size: 1.05rem; margin: 6px 0; }
 
 /* minimap + quest compass */
