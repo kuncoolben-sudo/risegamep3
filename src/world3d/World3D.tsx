@@ -12,6 +12,7 @@ import { Character3D, Pet3D, type Limbs } from './Character3D';
 import { worldSession } from './session';
 import { LOCATION_MODEL, NEAR_RADIUS, WORLD_RADIUS, collideRadius, footprint, toWorld } from './config';
 import { IslandWorld, OBSTACLE_SPOTS, Scenery } from './Island';
+import { daylight, phaseAt } from './daylight';
 
 // Opening flyover, once per visit: from out at sea, low enough to see the sky, to behind the player.
 const INTRO_FROM = new THREE.Vector3(0, 26, 100);
@@ -68,22 +69,50 @@ function Road({ a, b, open }: { a: LocationRow; b: LocationRow; open: boolean })
   );
 }
 
-// The sun follows the player so shadows stay sharp wherever you walk in the larger world.
-function SunLight({ target, shadows }: { target: MutableRefObject<THREE.Vector3>; shadows: boolean }) {
+// Sun (or moon), sky light and ambient light, coloured by the time of day (daylight.ts), which this also moves on and
+// checks against the clock; the fog and the background take the horizon's colour. The sun follows the player so
+// shadows stay sharp wherever you walk in the larger world.
+function Lights({ target, shadows }: { target: MutableRefObject<THREE.Vector3>; shadows: boolean }) {
   const light = useRef<THREE.DirectionalLight>(null);
+  const ambient = useRef<THREE.AmbientLight>(null);
+  const hemi = useRef<THREE.HemisphereLight>(null);
   const aim = useMemo(() => new THREE.Object3D(), []);
-  useFrame(() => {
-    const l = light.current;
-    if (!l) return;
+  const dir = useMemo(() => new THREE.Vector3(), []);
+  const scene = useThree((s) => s.scene);
+  useEffect(() => {
+    const id = window.setInterval(() => daylight.go(phaseAt()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  useFrame((_, dt) => {
+    daylight.step(dt);
     const t = target.current;
-    l.position.set(t.x + 14, 24, t.z + 10);
+    const l = light.current;
+    if (l) {
+      daylight.lightDir(dir).multiplyScalar(30);
+      l.position.set(t.x + dir.x, dir.y, t.z + dir.z);
+      daylight.color((k) => k.light.color, l.color);
+      l.intensity = daylight.num((k) => k.light.intensity);
+    }
     aim.position.set(t.x, 0, t.z);
     aim.updateMatrixWorld();
+    if (ambient.current) {
+      daylight.color((k) => k.ambient[0], ambient.current.color);
+      ambient.current.intensity = daylight.num((k) => k.ambient[1]);
+    }
+    if (hemi.current) {
+      daylight.color((k) => k.hemi[0], hemi.current.color);
+      daylight.color((k) => k.hemi[1], hemi.current.groundColor);
+      hemi.current.intensity = daylight.num((k) => k.hemi[2]);
+    }
+    if (scene.fog instanceof THREE.Fog) daylight.sky(0, scene.fog.color);
+    if (scene.background instanceof THREE.Color) daylight.sky(0, scene.background);
   });
   return (
     <>
+      <ambientLight ref={ambient} />
+      <hemisphereLight ref={hemi} />
       <primitive object={aim} />
-      <directionalLight ref={light} target={aim} intensity={2.0} castShadow={shadows} shadow-mapSize={[1024, 1024]}
+      <directionalLight ref={light} target={aim} castShadow={shadows} shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} shadow-camera-near={1} shadow-camera-far={70} />
     </>
   );
@@ -365,9 +394,7 @@ export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
       <Canvas shadows={!lowPower} dpr={lowPower ? 1 : [1, 1.75]} camera={{ fov: 42, near: 0.3, far: 1200 }} gl={{ antialias: !lowPower }}>
         <color attach="background" args={['#bfe6ff']} />
         <fog attach="fog" args={['#cdeeff', 160, 620]} />
-        <ambientLight intensity={1.15} />
-        <hemisphereLight args={['#dff3ff', '#8bc26a', 0.6]} />
-        <SunLight target={playerPos} shadows={!lowPower} />
+        <Lights target={playerPos} shadows={!lowPower} />
         <Suspense fallback={null}>
           <IslandWorld shadows={!lowPower} />
           {paths.map(([a, b]) => {
