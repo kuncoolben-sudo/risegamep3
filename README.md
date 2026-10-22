@@ -79,7 +79,27 @@ workflow **Migrate database (Supabase)** รัน `supabase/migrations/*` (ไ�
 pip install bpy                # Blender เป็นโมดูล Python (ต้อง Python 3.11–3.13)
 npm run models:build           # รัน tools/blender/build_models.py
 ```
-ชื่อโหนด/วัสดุในโมเดล (`ArmL`, `Hair_wavy`, วัสดุ `Skin`/`Hair`/`Outfit`) เป็นสัญญากับ `src/world3d/Character3D.tsx` ถ้าเปลี่ยนโมเดลเป็นงานจากนักวาด ให้คงชื่อเหล่านี้ไว้ ระบบปรับแต่งตัวละครจะทำงานต่อได้
+ชื่อโหนด/วัสดุในโมเดล (`ArmL`, `Hair_wavy`, วัสดุ `Skin`/`Hair`/`Outfit`) เป็นสัญญากับ `src/world3d/Character3D.tsx` ถ้าเปลี่ยนโมเดลเป็นงานจากนักวาด ให้คงชื่อเหล่านี้ไว้ ระบบปรับแต่งตัวละครจะทำงานต่อได้ (อาคาร Unit 1–8 เดิม `b_school`…`b_story` ยังสร้างจากสคริปต์นี้ แต่เกมใช้สถานที่ด้านล่างแทนแล้ว)
+
+### สถานที่ 8 ด่าน (แลนด์มาร์กไทย)
+
+ด่าน Unit 1–8 บนแผนที่เป็นไดโอรามาสถานที่จริงของไทยตามภาพต้นแบบ บทเรียนในแต่ละด่านเหมือนเดิม (หัวข้อของ Unit อยู่ในคำบรรยายของสถานที่)
+
+| ด่าน | สถานที่ | โมเดล |
+|---|---|---|
+| Unit 1 Back to school again | พระบรมมหาราชวัง | `loc_palace.glb` |
+| Unit 2 All year round | ดอยอินทนนท์ | `loc_inthanon.glb` |
+| Unit 3 Family and friends | เชียงใหม่ (โคมยี่เป็ง) | `loc_chiangmai.glb` |
+| Unit 4 Around town | หมู่เกาะพีพี | `loc_phiphi.glb` |
+| Unit 5 Birthday food | ตลาดน้ำอัมพวา | `loc_amphawa.glb` |
+| Unit 6 My day | วัดร่องขุ่น | `loc_whitetemple.glb` |
+| Unit 7 At the beach | ภูเก็ต | `loc_phuket.glb` |
+| Unit 8 My favourite stories | เขาใหญ่ | `loc_khaoyai.glb` |
+
+- สร้างจาก `tools/blender/build_places.py` (`npm run places:build`) หนึ่งไฟล์ต่อสถานที่ใน `tools/blender/places/` ส่วนที่ใช้ร่วมกัน (หลังคาไทยซ้อนชั้น เจดีย์ เกาะหินปูน ร่มลาย เรือ ลำธาร) อยู่ใน `places/common.py`
+- ไฟล์บีบอัดแบบ Draco (8 ไฟล์ รวม ~450KB) เกมถอดรหัสด้วยไฟล์ของเราเองใน `public/draco/` (คัดลอกจาก `node_modules/three/examples/jsm/libs/draco/gltf/`) ไม่ใช้ CDN
+- ขนาดในเกม วงแสดงสถานะ โดมตอนล็อก ระยะชน และความสูงป้ายชื่อ มาจาก `LOCATION_MODEL` ใน `src/world3d/config.ts` (`radius`/`labelY` คือ `RADIUS`/`LABEL_Y` ของแต่ละโมดูล)
+- ถ้าจะสลับว่าสถานที่ไหนเป็นด่านไหน ให้แก้ `file` ใน `LOCATION_MODEL` และชื่อ/ไอคอน/คำบรรยายใน `content/world.json` แล้ว `npm run seed:build`
 
 ## สัตว์เลี้ยง 6 ตัว 3 ร่าง พร้อมท่าปล่อยพลัง
 

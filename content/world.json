@@ -33,9 +33,9 @@
   {
    "id": "u1",
    "kind": "unit",
-   "name_en": "Back to School",
-   "name_th": "กลับสู่โรงเรียน (Unit 1)",
-   "icon": "🏫",
+   "name_en": "Grand Palace",
+   "name_th": "พระบรมมหาราชวัง (Unit 1)",
+   "icon": "👑",
    "pages": [
     8,
     21
@@ -45,14 +45,14 @@
    "requires": [
     "start"
    ],
-   "blurb_th": "Unit 1 Back to school again: ประเทศ เวลา กิจวัตร"
+   "blurb_th": "Unit 1 Back to school again: ประเทศ เวลา กิจวัตร · ออกเดินทางรอบเมืองไทย เริ่มที่พระบรมมหาราชวัง กรุงเทพฯ"
   },
   {
    "id": "u2",
    "kind": "unit",
-   "name_en": "All Year Round",
-   "name_th": "ตลอดปี (Unit 2)",
-   "icon": "🌦️",
+   "name_en": "Doi Inthanon",
+   "name_th": "ดอยอินทนนท์ (Unit 2)",
+   "icon": "⛰️",
    "pages": [
     22,
     35
@@ -62,7 +62,7 @@
    "requires": [
     "u1"
    ],
-   "blurb_th": "Unit 2 All year round: อากาศ เดือน ฤดู"
+   "blurb_th": "Unit 2 All year round: อากาศ เดือน ฤดู · ยอดดอยที่สูงที่สุดในไทย มีเมฆหมอกและอากาศหนาว"
   },
   {
    "id": "campA",
@@ -82,9 +82,9 @@
   {
    "id": "u3",
    "kind": "unit",
-   "name_en": "Family & Friends",
-   "name_th": "ครอบครัวและเพื่อน (Unit 3)",
-   "icon": "👨‍👩‍👧",
+   "name_en": "Chiang Mai",
+   "name_th": "เชียงใหม่ (Unit 3)",
+   "icon": "🏮",
    "pages": [
     36,
     49
@@ -94,14 +94,14 @@
    "requires": [
     "u2"
    ],
-   "blurb_th": "Unit 3 Family and friends: ลักษณะ อายุ น้ำหนัก"
+   "blurb_th": "Unit 3 Family and friends: ลักษณะ อายุ น้ำหนัก · เมืองล้านนา ครอบครัวและเพื่อนมาปล่อยโคมยี่เป็งด้วยกัน"
   },
   {
    "id": "u4",
    "kind": "unit",
-   "name_en": "Around Town",
-   "name_th": "รอบเมือง (Unit 4)",
-   "icon": "🏙️",
+   "name_en": "Phi Phi Islands",
+   "name_th": "หมู่เกาะพีพี (Unit 4)",
+   "icon": "🚤",
    "pages": [
     50,
     63
@@ -111,7 +111,7 @@
    "requires": [
     "u3"
    ],
-   "blurb_th": "Unit 4 Around town: สถานที่ การเดินทาง คำบอกตำแหน่ง"
+   "blurb_th": "Unit 4 Around town: สถานที่ การเดินทาง คำบอกตำแหน่ง · เดินทางด้วยเรือรอบอ่าวมาหยา"
   },
   {
    "id": "inn1",
@@ -131,9 +131,9 @@
   {
    "id": "u5",
    "kind": "unit",
-   "name_en": "Birthday Food",
-   "name_th": "อาหารวันเกิด (Unit 5)",
-   "icon": "🎂",
+   "name_en": "Floating Market",
+   "name_th": "ตลาดน้ำอัมพวา (Unit 5)",
+   "icon": "🛶",
    "pages": [
     64,
     77
@@ -143,14 +143,14 @@
    "requires": [
     "u4"
    ],
-   "blurb_th": "Unit 5 Birthday food: อาหาร ลำดับที่ คำเชิญ"
+   "blurb_th": "Unit 5 Birthday food: อาหาร ลำดับที่ คำเชิญ · ซื้อขายอาหารจากเรือในตลาดน้ำ"
   },
   {
    "id": "u6",
    "kind": "unit",
-   "name_en": "My Day",
-   "name_th": "วันของฉัน (Unit 6)",
-   "icon": "⏰",
+   "name_en": "White Temple",
+   "name_th": "วัดร่องขุ่น (Unit 6)",
+   "icon": "🛕",
    "pages": [
     78,
     91
@@ -160,7 +160,7 @@
    "requires": [
     "u5"
    ],
-   "blurb_th": "Unit 6 My day: กิจวัตร เวลา งานบ้าน ความถี่"
+   "blurb_th": "Unit 6 My day: กิจวัตร เวลา งานบ้าน ความถี่ · วัดสีขาวแห่งเชียงราย งานศิลปะสุดอลังการ"
   },
   {
    "id": "campB",
@@ -180,8 +180,8 @@
   {
    "id": "u7",
    "kind": "unit",
-   "name_en": "At the Beach",
-   "name_th": "ที่ชายหาด (Unit 7)",
+   "name_en": "Phuket",
+   "name_th": "ภูเก็ต (Unit 7)",
    "icon": "🏖️",
    "pages": [
     92,
@@ -192,14 +192,14 @@
    "requires": [
     "u6"
    ],
-   "blurb_th": "Unit 7 At the beach: กิจกรรม งานอดิเรก พระอาทิตย์"
+   "blurb_th": "Unit 7 At the beach: กิจกรรม งานอดิเรก พระอาทิตย์ · ชายหาด เรือหางยาว และประภาคารแหลมพรหมเทพ"
   },
   {
    "id": "u8",
    "kind": "unit",
-   "name_en": "Favourite Stories",
-   "name_th": "นิทานเรื่องโปรด (Unit 8)",
-   "icon": "📚",
+   "name_en": "Khao Yai",
+   "name_th": "เขาใหญ่ (Unit 8)",
+   "icon": "🦌",
    "pages": [
     106,
     119
@@ -209,7 +209,7 @@
    "requires": [
     "u7"
    ],
-   "blurb_th": "Unit 8 My favourite stories: สัตว์ นิทาน สิ่งมีชีวิต"
+   "blurb_th": "Unit 8 My favourite stories: สัตว์ นิทาน สิ่งมีชีวิต · อุทยานแห่งชาติ น้ำตก กวาง และนกเงือก"
   },
   {
    "id": "festival",
