@@ -473,12 +473,22 @@ export function World3D({ onPlay, onPvp, hud, goTo, onGoConsumed }: {
     return () => window.removeEventListener('keydown', k);
   }, [enter]);
 
+  // the status bar wraps to two rows on narrow screens: the minimap and the place panel sit just below it, wherever that is
+  const worldRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const world = worldRef.current, bar = world?.querySelector<HTMLElement>('.hud');
+    if (!world || !bar) return;
+    const ro = new ResizeObserver(() => world.style.setProperty('--hud-bottom', `${bar.offsetTop + bar.offsetHeight}px`));
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, []);
+
   const toggleLow = () => setLowPower((v) => { try { localStorage.setItem('lowPower', v ? '0' : '1'); } catch { /* ignore */ } return !v; });
   const nearLoc = near ? byId.get(near) : undefined;
   const coarse = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
 
   return (
-    <div className="world">
+    <div className="world" ref={worldRef}>
       <Canvas shadows={!lowPower} dpr={lowPower ? 1 : [1, 1.75]} camera={{ fov: 42, near: 0.3, far: 1200 }} gl={{ antialias: !lowPower }}>
         <color attach="background" args={['#bfe6ff']} />
         <fog attach="fog" args={['#cdeeff', 160, 620]} />

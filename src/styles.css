@@ -138,14 +138,15 @@ input:focus, textarea:focus { outline: 3px solid rgba(255,179,0,.45); border-col
 .world-hint { z-index: 2; left: 12px; top: auto; bottom: 12px; font-size: .78rem; }
 .world-low { z-index: 6; left: auto; right: 12px; top: auto; bottom: 12px; }
 .enter-btn { z-index: 6; bottom: 56px; }
-.world-panel { z-index: 7; top: 92px; max-height: calc(100% - 150px); }
-@media (max-width: 800px) { .world-panel { top: 128px; max-height: calc(100% - 190px); } }
+/* --hud-bottom: where the status bar ends (World3D measures it; it wraps to two rows on phones) */
+.world-panel { z-index: 7; top: calc(var(--hud-bottom, 84px) + 10px); max-height: calc(100% - var(--hud-bottom, 84px) - 68px); }
+@media (max-width: 800px) { .world-hint { max-width: calc(100% - 170px); border-radius: 14px; } }
 
 .status-card { background: var(--bg); border-radius: 14px; padding: 10px 14px; margin-top: 10px; display: grid; gap: 6px; text-align: left; }
 .stat-row { display: flex; gap: 6px 16px; flex-wrap: wrap; justify-content: space-around; font-size: 1.05rem; margin: 6px 0; }
 
 /* minimap + quest compass */
-.minimap-wrap { position: absolute; left: 12px; top: 92px; z-index: 3; display: grid; gap: 6px; justify-items: start; pointer-events: none; }
+.minimap-wrap { position: absolute; left: 12px; top: calc(var(--hud-bottom, 84px) + 10px); z-index: 3; display: grid; gap: 6px; justify-items: start; pointer-events: none; }
 .minimap { position: relative; border-radius: 50%; background: radial-gradient(circle, #9bd77a, #6fb653); border: 3px solid rgba(255,255,255,.85); box-shadow: 0 3px 10px rgba(0,0,0,.35); overflow: hidden; }
 .mm-dot { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #9aa5b5; border: 1px solid #fff; }
 .mm-dot.open { background: #ffcf40; } .mm-dot.cleared { background: #3ddc84; }
@@ -154,7 +155,6 @@ input:focus, textarea:focus { outline: 3px solid rgba(255,179,0,.45); border-col
 .mm-me { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #ff4d4d; border: 2px solid #fff; }
 .quest-arrow { display: flex; align-items: center; gap: 8px; background: rgba(74,44,23,.78); color: #fff; padding: 4px 10px 4px 6px; border-radius: 999px; font-size: .8rem; line-height: 1.1; border: 2px solid var(--gold); }
 .arrow-icon { display: inline-block; font-size: 1.3rem; color: var(--gold); transform: rotate(var(--rot, 0rad)); }
-@media (max-width: 800px) { .minimap-wrap { top: 96px; } }
 
 /* pet showcase: 3D viewer, form tabs and the power each form releases */
 .pet-card small { text-align: center; }
